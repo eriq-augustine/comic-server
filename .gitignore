@@ -1,0 +1,10 @@
+*.swp
+.DS_Store
+
+/comic-server
+/bin/
+
+*.cbz
+*.cbr
+
+/test-data/

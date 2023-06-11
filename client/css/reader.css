@@ -1,0 +1,77 @@
+.comic-reader {
+    width: 100%;
+    height: 100%;
+
+    padding: 20px;
+
+    background: black;
+}
+
+.comic-reader .controls {
+    width: 100%;
+    height: 8%;
+    margin-bottom: 2%;
+
+    color: white;
+
+    display: flex;
+    flex-direction: row;
+    gap: 2em;
+}
+
+.comic-reader .controls .control legend {
+    display: inline-block;
+    margin-right: 0.25em;
+}
+
+.comic-reader .controls .control input {
+    margin-right: 0.25em;
+}
+
+.comic-reader .controls .control.control-page input {
+    width: 4em;
+}
+
+.comic-reader .images {
+    width: 100%;
+    height: 90%;
+
+    overflow-y: scroll;
+    overflow-X: none;
+
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 10px;
+}
+
+.comic-reader[data-seamless='true'] .images {
+    gap: 0px;
+}
+
+.comic-reader .images .image,
+.comic-reader .images .image img {
+    width: 0;
+    height: 0;
+}
+
+.comic-reader[data-fit='page'] .images .image,
+.comic-reader[data-fit='page'] .images .image img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.comic-reader[data-fit='width'] .images .image,
+.comic-reader[data-fit='width'] .images .image img {
+    width: 100%;
+    height: max-content;
+}
+
+.comic-reader[data-fit='none'] .images .image,
+.comic-reader[data-fit='none'] .images .image img {
+    width: max-content;
+    height: max-content;
+}
