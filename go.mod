@@ -2,7 +2,10 @@ module github.com/eriq-augustine/comic-server
 
 go 1.20
 
-require github.com/rs/zerolog v1.29.1
+require (
+	github.com/mattn/go-sqlite3 v1.14.17
+	github.com/rs/zerolog v1.29.1
+)
 
 require (
 	github.com/mattn/go-colorable v0.1.12 // indirect

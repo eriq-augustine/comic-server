@@ -7,4 +7,6 @@
 *.cbz
 *.cbr
 
+*.db
+
 /test-data/

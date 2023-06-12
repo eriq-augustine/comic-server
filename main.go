@@ -12,6 +12,7 @@ import (
 
     "github.com/rs/zerolog/log"
 
+    "github.com/eriq-augustine/comic-server/database"
     "github.com/eriq-augustine/comic-server/metadata"
 )
 
@@ -72,6 +73,12 @@ func (this *Server) Run() {
 }
 
 func main() {
+    err := database.Open();
+    if (err != nil) {
+        log.Fatal().Err(err).Msg("Could not open database.");
+    }
+    defer database.Close();
+
     var server = Server{
         archives: importDir(DATA_DIR),
     };
