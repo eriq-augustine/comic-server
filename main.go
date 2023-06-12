@@ -3,7 +3,6 @@ package main
 import (
     "encoding/json"
     "fmt"
-    "io/fs"
     "net/http"
     "path/filepath"
     "regexp"
@@ -14,6 +13,7 @@ import (
 
     "github.com/eriq-augustine/comic-server/database"
     "github.com/eriq-augustine/comic-server/metadata"
+    "github.com/eriq-augustine/comic-server/types"
 )
 
 // TEST
@@ -22,7 +22,7 @@ const DATA_DIR = "test-data";
 const CLIENT_DIR = "client";
 
 type Server struct {
-    archives []metadata.Archive
+    archives []*types.Archive
 }
 
 func (this *Server) ServeHTTP(response http.ResponseWriter, request *http.Request) {
@@ -79,37 +79,15 @@ func main() {
     }
     defer database.Close();
 
+    archives, err := metadata.ImportDir(DATA_DIR);
+    if (err != nil) {
+        log.Fatal().Err(err).Msg("Failed to import dir.");
+    }
+
+    // TEST: TODO: Get archives from DB.
     var server = Server{
-        archives: importDir(DATA_DIR),
+        archives: archives,
     };
 
     server.Run();
-}
-
-func importDir(rootPath string) []metadata.Archive {
-    var archives = make([]metadata.Archive, 0);
-
-    filepath.WalkDir(rootPath, func(path string, dirent fs.DirEntry, err error) error {
-        if err != nil {
-            log.Fatal().Err(err);
-        }
-
-        if (dirent.IsDir()) {
-            return nil;
-        }
-
-        var archive = importPath(path);
-        archive.ID = len(archives);
-
-        archives = append(archives, archive);
-
-        return nil;
-    });
-
-    return archives;
-}
-
-func importPath(path string) metadata.Archive {
-    var archive = metadata.FromPath(path);
-    return archive;
 }

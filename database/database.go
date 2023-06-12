@@ -28,19 +28,8 @@ func Open() error {
 }
 
 func ensureTables() error {
-	rows, err := db.Query("SELECT COUNT(*) FROM sqlite_master");
-	if (err != nil) {
-		return err;
-	}
-	defer rows.Close();
-
-    if (!rows.Next()) {
-        return fmt.Errorf("No count returned from check for tables.");
-    }
-
     var count int;
-
-    err = rows.Scan(&count);
+	err := db.QueryRow("SELECT COUNT(*) FROM sqlite_master").Scan(&count);
     if (err != nil) {
         return err;
     }
@@ -51,8 +40,6 @@ func ensureTables() error {
     }
 
     // No tables exist, create them.
-    rows.Close();
-
 	_, err = db.Exec(SQL_CREATE_TABLES);
 	if (err != nil) {
 		return fmt.Errorf("Could not create tables: %w.", err);

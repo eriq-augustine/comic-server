@@ -14,10 +14,10 @@ CREATE TABLE Series (
 CREATE TABLE Archives (
     id INTEGER PRIMARY KEY,
     series_id INTEGER REFERENCES Series(id),
-    path TEXT NOT NULL,
+    path TEXT NOT NULL UNIQUE,
     volume TEXT,
-    chater TEXT,
-    num_pages INTEGER
+    chapter TEXT,
+    page_count INTEGER
 );
 
 CREATE TABLE RelatedSeries (
