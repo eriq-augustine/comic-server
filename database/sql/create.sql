@@ -1,4 +1,5 @@
-DROP TABLE IF EXISTS MetadataSources;
+DROP TABLE IF EXISTS MetadataCrawls;
+DROP TABLE IF EXISTS MetadataCrawlRequests;
 DROP TABLE IF EXISTS Tags;
 DROP TABLE IF EXISTS RelatedSeries;
 DROP TABLE IF EXISTS Archives;
@@ -35,12 +36,22 @@ CREATE TABLE Tags (
     metadata_source TEXT
 );
 
-CREATE TABLE MetadataSources (
+CREATE TABLE MetadataCrawlRequests (
     id INTEGER PRIMARY KEY,
+    source_series INTEGER REFERENCES Series(id),
+    search_name TEXT NOT NULL,
+    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(source_series, search_name)
+);
+
+CREATE TABLE MetadataCrawls (
+    id INTEGER PRIMARY KEY,
+    source TEXT NOT NULL,
+    source_id TEXT NOT NULL,
     series_id INTEGER REFERENCES Series(id),
-    name TEXT,
+    name TEXT NOT NULL,
     author TEXT,
     year INTEGER,
-    source TEXT,
-    timestamp INTEGER
+    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(source, source_id)
 );

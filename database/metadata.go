@@ -19,24 +19,20 @@ var SQL_INSERT_SERIES string;
 //go:embed sql/insert-archive.sql
 var SQL_INSERT_ARCHIVE string;
 
+//go:embed sql/upsert-crawl-request.sql
+var SQL_UPSERT_CRAWL_REQUEST string;
+
 // Ensure that each archive exists in the database.
 // Whether from the passed in archive or the database,
 // each archive will have its latest metadata attatched when done.
 func PersistArchives(archives []*types.Archive) error {
-    transaction, err := db.Begin();
-    if (err != nil) {
-        return err
-    }
-    defer transaction.Rollback();
-
     for _, archive := range archives {
-        err = persistArchive(archive);
+        err := persistArchive(archive);
         if (err != nil) {
             return err;
         }
     }
 
-    transaction.Commit();
     return nil;
 }
 
@@ -66,7 +62,13 @@ func persistArchive(archive *types.Archive) error {
 }
 
 func insertArchive(archive *types.Archive) error {
-    err := ensureSeries(archive);
+    transaction, err := db.Begin();
+    if (err != nil) {
+        return err
+    }
+    defer transaction.Rollback();
+
+    err = ensureSeries(archive);
     if (err != nil) {
         return err;
     }
@@ -89,6 +91,7 @@ func insertArchive(archive *types.Archive) error {
 
     archive.ID = int(id);
 
+    transaction.Commit();
     return nil;
 }
 
@@ -116,7 +119,23 @@ func ensureSeries(archive *types.Archive) error {
         return nil;
     }
 
-    return insertSeries(archive.Series);
+    err = insertSeries(archive.Series);
+    if (err != nil) {
+        return err;
+    }
+
+    return RequestMetadataCrawl(archive.Series);
+}
+
+func RequestMetadataCrawl(series *types.Series) error {
+    statement, err := db.Prepare(SQL_UPSERT_CRAWL_REQUEST);
+    if (err != nil) {
+        return err;
+    }
+    defer statement.Close();
+
+    _, err = statement.Exec(series.ID, series.Name);
+    return err;
 }
 
 func FetchArchiveByPath(path string) (*types.Archive, error) {
