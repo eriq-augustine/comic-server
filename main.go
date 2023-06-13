@@ -9,6 +9,7 @@ import (
     "strconv"
     "strings"
 
+    "github.com/rs/zerolog"
     "github.com/rs/zerolog/log"
 
     "github.com/eriq-augustine/comic-server/database"
@@ -28,15 +29,10 @@ type Server struct {
 func (this *Server) ServeHTTP(response http.ResponseWriter, request *http.Request) {
     var path = request.URL.Path;
 
-    // TEST
-    fmt.Println("URL: ", path);
+    log.Debug().Str("URL",  path).Msg("");
 
     if (strings.HasPrefix(path, "/client/")) {
         var targetPath = filepath.Join(CLIENT_DIR, strings.TrimPrefix(path, "/client/"));
-
-        // TEST
-        fmt.Println("TEST", targetPath);
-
         http.ServeFile(response, request, targetPath);
         return;
     }
@@ -73,6 +69,9 @@ func (this *Server) Run() {
 }
 
 func main() {
+    // TODO(eriq): Config
+    zerolog.SetGlobalLevel(zerolog.DebugLevel);
+
     err := database.Open();
     if (err != nil) {
         log.Fatal().Err(err).Msg("Could not open database.");
