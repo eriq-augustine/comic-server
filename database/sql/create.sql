@@ -9,7 +9,9 @@ CREATE TABLE Series (
     id INTEGER PRIMARY KEY,
     name TEXT NOT NULL,
     author TEXT,
-    year INTEGER
+    year INTEGER,
+    metadata_source TEXT,
+    metadata_source_id TEXT
 );
 
 CREATE TABLE Archives (
@@ -38,17 +40,17 @@ CREATE TABLE Tags (
 
 CREATE TABLE MetadataCrawlRequests (
     id INTEGER PRIMARY KEY,
-    source_series INTEGER REFERENCES Series(id),
-    search_name TEXT NOT NULL,
-    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(source_series, search_name)
+    source_series INTEGER REFERENCES Series(id) NOT NULL,
+    query TEXT NOT NULL,
+    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE MetadataCrawls (
     id INTEGER PRIMARY KEY,
     source TEXT NOT NULL,
     source_id TEXT NOT NULL,
-    series_id INTEGER REFERENCES Series(id),
+    source_series_id INTEGER REFERENCES Series(id) NOT NULL,
+    query TEXT NOT NULL,
     name TEXT NOT NULL,
     author TEXT,
     year INTEGER,

@@ -7,14 +7,14 @@ import (
     "regexp"
 
     "github.com/eriq-augustine/comic-server/database"
-    "github.com/eriq-augustine/comic-server/types"
+    "github.com/eriq-augustine/comic-server/model"
 )
 
 // Try to re-create metadata using only path information.
-func FromPath(path string) *types.Archive {
+func FromPath(path string) *model.Archive {
     var filename = filepath.Base(path);
 
-    var archive = types.EmptyArchive();
+    var archive = model.EmptyArchive();
     archive.Path = path;
 
     var pattern = regexp.MustCompile(`^(.*)\s+v(\d+[a-z]?)\s+c(\d+[a-z]?)\.cbz$`);
@@ -34,8 +34,8 @@ func FromPath(path string) *types.Archive {
 // First the directory will be walked and all the archives collected.
 // Then, they will be added to the database (if no error has occured).
 // On error, no archives will be added to the database.
-func ImportDir(rootPath string) ([]*types.Archive, error) {
-    var archives = make([]*types.Archive, 0);
+func ImportDir(rootPath string) ([]*model.Archive, error) {
+    var archives = make([]*model.Archive, 0);
 
     err := filepath.WalkDir(rootPath, func(path string, dirent fs.DirEntry, err error) error {
         if (err != nil) {

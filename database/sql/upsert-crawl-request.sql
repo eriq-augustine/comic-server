@@ -1,6 +1,6 @@
 INSERT INTO MetadataCrawlRequests (
     source_series,
-    search_name
+    query
 ) VALUES (
     ?,
     ?

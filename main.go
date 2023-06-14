@@ -14,7 +14,7 @@ import (
 
     "github.com/eriq-augustine/comic-server/database"
     "github.com/eriq-augustine/comic-server/metadata"
-    "github.com/eriq-augustine/comic-server/types"
+    "github.com/eriq-augustine/comic-server/model"
 )
 
 // TEST
@@ -23,7 +23,7 @@ const DATA_DIR = "test-data";
 const CLIENT_DIR = "client";
 
 type Server struct {
-    archives []*types.Archive
+    archives []*model.Archive
 }
 
 func (this *Server) ServeHTTP(response http.ResponseWriter, request *http.Request) {
@@ -81,6 +81,12 @@ func main() {
     archives, err := metadata.ImportDir(DATA_DIR);
     if (err != nil) {
         log.Fatal().Err(err).Msg("Failed to import dir.");
+    }
+
+    // TEST: TODO: Setup as background job.
+    err = metadata.ProcessCrawlRequests();
+    if (err != nil) {
+        log.Fatal().Err(err).Msg("Failed to crawl.");
     }
 
     // TEST: TODO: Get archives from DB.

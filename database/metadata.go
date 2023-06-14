@@ -4,11 +4,17 @@ import (
     _ "embed"
     "fmt"
 
-    "github.com/eriq-augustine/comic-server/types"
+    "github.com/eriq-augustine/comic-server/model"
 )
 
 //go:embed sql/select-archive-by-path.sql
 var SQL_SELECT_ARCHIVE_BY_PATH string;
+
+//go:embed sql/select-crawl-requests.sql
+var SQL_SELECT_CRAWL_REQUESTS string;
+
+//go:embed sql/select-series-by-id.sql
+var SQL_SELECT_SERIES_BY_ID string;
 
 //go:embed sql/select-series-by-name.sql
 var SQL_SELECT_SERIES_BY_NAME string;
@@ -25,7 +31,7 @@ var SQL_UPSERT_CRAWL_REQUEST string;
 // Ensure that each archive exists in the database.
 // Whether from the passed in archive or the database,
 // each archive will have its latest metadata attatched when done.
-func PersistArchives(archives []*types.Archive) error {
+func PersistArchives(archives []*model.Archive) error {
     for _, archive := range archives {
         err := persistArchive(archive);
         if (err != nil) {
@@ -36,8 +42,41 @@ func PersistArchives(archives []*types.Archive) error {
     return nil;
 }
 
+func FetchCrawlRequests() ([]*model.MetadataCrawlRequest, error) {
+    rows, err := db.Query(SQL_SELECT_CRAWL_REQUESTS);
+    if (err != nil) {
+        return nil, err;
+    }
+    defer rows.Close();
+
+    var requests = make([]*model.MetadataCrawlRequest, 0);
+
+    for (rows.Next()) {
+        var request *model.MetadataCrawlRequest = model.EmptyCrawlRequest();
+
+        err = rows.Scan(
+                &request.ID,
+                &request.Query,
+                &request.Timestamp,
+                &request.Series.ID,
+                &request.Series.Name,
+                &request.Series.Author,
+                &request.Series.Year,
+                &request.Series.MetadataSource,
+                &request.Series.MetadataSourceID,
+        );
+        if (err != nil) {
+            return nil, err;
+        }
+
+        requests = append(requests, request);
+    }
+
+    return requests, nil;
+}
+
 // TODO(eriq): This function does not consider updating an existing archive.
-func persistArchive(archive *types.Archive) error {
+func persistArchive(archive *model.Archive) error {
     if (archive.Path == "") {
         return fmt.Errorf("Persisting archive requires a Path.");
     }
@@ -61,7 +100,7 @@ func persistArchive(archive *types.Archive) error {
     return insertArchive(archive);
 }
 
-func insertArchive(archive *types.Archive) error {
+func insertArchive(archive *model.Archive) error {
     transaction, err := db.Begin();
     if (err != nil) {
         return err
@@ -96,7 +135,7 @@ func insertArchive(archive *types.Archive) error {
 }
 
 // If a series already exists with a 100% name match, then use that.
-func ensureSeries(archive *types.Archive) error {
+func ensureSeries(archive *model.Archive) error {
     if (archive.Series == nil) {
         return fmt.Errorf("Cannot ensure a nil series.");
     }
@@ -127,7 +166,7 @@ func ensureSeries(archive *types.Archive) error {
     return RequestMetadataCrawl(archive.Series);
 }
 
-func RequestMetadataCrawl(series *types.Series) error {
+func RequestMetadataCrawl(series *model.Series) error {
     statement, err := db.Prepare(SQL_UPSERT_CRAWL_REQUEST);
     if (err != nil) {
         return err;
@@ -138,14 +177,14 @@ func RequestMetadataCrawl(series *types.Series) error {
     return err;
 }
 
-func FetchArchiveByPath(path string) (*types.Archive, error) {
+func FetchArchiveByPath(path string) (*model.Archive, error) {
     statement, err := db.Prepare(SQL_SELECT_ARCHIVE_BY_PATH);
     if (err != nil) {
         return nil, err;
     }
     defer statement.Close();
 
-    var archive *types.Archive = types.EmptyArchive();
+    var archive *model.Archive = model.EmptyArchive();
     archive.Path = path;
 
     rows, err := statement.Query(path);
@@ -170,7 +209,10 @@ func FetchArchiveByPath(path string) (*types.Archive, error) {
             &archive.Series.ID,
             &archive.Series.Name,
             &archive.Series.Author,
-            &archive.Series.Year);
+            &archive.Series.Year,
+            &archive.Series.MetadataSource,
+            &archive.Series.MetadataSourceID,
+    );
     if (err != nil) {
         return nil, err;
     }
@@ -178,14 +220,14 @@ func FetchArchiveByPath(path string) (*types.Archive, error) {
     return archive, nil;
 }
 
-func FetchSeriesByName(name string) (*types.Series, error) {
+func FetchSeriesByName(name string) (*model.Series, error) {
     statement, err := db.Prepare(SQL_SELECT_SERIES_BY_NAME);
     if (err != nil) {
         return nil, err;
     }
     defer statement.Close();
 
-    var series *types.Series = types.EmptySeries();
+    var series *model.Series = model.EmptySeries();
     series.Name = name;
 
     rows, err := statement.Query(name);
@@ -205,7 +247,10 @@ func FetchSeriesByName(name string) (*types.Series, error) {
     err = rows.Scan(
             &series.ID,
             &series.Author,
-            &series.Year);
+            &series.Year,
+            &series.MetadataSource,
+            &series.MetadataSourceID,
+    );
     if (err != nil) {
         return nil, err;
     }
@@ -213,7 +258,31 @@ func FetchSeriesByName(name string) (*types.Series, error) {
     return series, nil;
 }
 
-func insertSeries(series *types.Series) error {
+// If the seies does not exist, an error will be returned.
+func FetchSeriesByID(id int) (*model.Series, error) {
+    statement, err := db.Prepare(SQL_SELECT_SERIES_BY_ID);
+    if (err != nil) {
+        return nil, err;
+    }
+    defer statement.Close();
+
+    var series *model.Series = model.EmptySeries();
+
+    err = statement.QueryRow(id).Scan(
+            &series.ID,
+            &series.Author,
+            &series.Year,
+            &series.MetadataSource,
+            &series.MetadataSourceID,
+    );
+    if (err != nil) {
+        return nil, err;
+    }
+
+    return series, nil;
+}
+
+func insertSeries(series *model.Series) error {
     statement, err := db.Prepare(SQL_INSERT_SERIES);
     if (err != nil) {
         return err;
@@ -232,5 +301,10 @@ func insertSeries(series *types.Series) error {
 
     series.ID = int(id);
 
+    return nil;
+}
+
+func ResolveCrawlRequest(request *model.MetadataCrawlRequest, results []*model.MetadataCrawl) error {
+    // TEST
     return nil;
 }
