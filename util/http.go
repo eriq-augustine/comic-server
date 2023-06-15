@@ -1,13 +1,13 @@
 package util
 
 import (
+    "bytes"
     "fmt"
     "io"
     "net/http"
     neturl "net/url"
     "os"
     "path/filepath"
-    "strings"
     "time"
 
     "github.com/rs/zerolog/log"
@@ -20,27 +20,27 @@ const CACHE_DIR = "__cache__";
 const RATE_LIMIT_DELAY_SEC = 1
 var rateLimit = make(map[string]time.Time);
 
-func GetWithCache(url string) (string, error) {
-    text, err := checkCache(url);
+func GetWithCache(url string) ([]byte, error) {
+    data, err := checkCache(url);
     if (err != nil) {
-        return "", err;
+        return nil, err;
     }
 
-    if (text != "") {
-        return text, nil;
+    if (data != nil) {
+        return data, nil;
     }
 
-    text, err = Get(url);
+    data, err = Get(url);
     if (err != nil) {
-        return "", err;
+        return nil, err;
     }
 
-    err = saveCache(url, text);
+    err = saveCache(url, data);
     if (err != nil) {
-        return "", err;
+        return nil, err;
     }
 
-    return text, nil;
+    return data, nil;
 }
 
 func ensureRateLimit(rawURL string) {
@@ -69,46 +69,46 @@ func ensureRateLimit(rawURL string) {
     rateLimit[hostname] = time.Now();
 }
 
-func Get(url string) (string, error) {
+func Get(url string) ([]byte, error) {
     ensureRateLimit(url);
 
     log.Debug().Str("url", url).Msg("GET");
 
     response, err := http.Get(url);
     if (err != nil) {
-        return "", err;
+        return nil, err;
     }
     defer response.Body.Close()
 
     if (response.StatusCode != 200) {
-        return "", fmt.Errorf("Got non-200 status code (%d) for '%s'.", response.StatusCode, url);
+        return nil, fmt.Errorf("Got non-200 status code (%d) for '%s'.", response.StatusCode, url);
     }
 
-    buffer := new(strings.Builder);
-	_, err = io.Copy(buffer, response.Body);
+    bytes := new(bytes.Buffer);
+	_, err = io.Copy(bytes, response.Body);
 	if (err != nil) {
-        return "", err;
+        return nil, err;
 	}
 
-	return buffer.String(), nil;
+	return bytes.Bytes(), nil;
 }
 
-func checkCache(url string) (string, error) {
+func checkCache(url string) ([]byte, error) {
     var path = getCachePath(url);
     if (!PathExists(path)) {
-        return "", nil;
+        return nil, nil;
     }
 
     bytes, err := os.ReadFile(path);
     if (err != nil) {
-        return "", err;
+        return nil, err;
     }
 
     log.Debug().Str("url", url).Msg("Cache hit.");
-    return string(bytes), nil;
+    return bytes, nil;
 }
 
-func saveCache(url string, text string) error {
+func saveCache(url string, data []byte) error {
     var path = getCachePath(url);
     os.MkdirAll(filepath.Dir(path), 0755);
 
@@ -116,7 +116,7 @@ func saveCache(url string, text string) error {
         os.Remove(path);
     }
 
-    return os.WriteFile(path, []byte(text), 0644);
+    return os.WriteFile(path, data, 0644);
 }
 
 func getCachePath(url string) string {

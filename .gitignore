@@ -4,6 +4,7 @@
 /comic-server
 /bin/
 /__cache__/
+/__images__/
 
 *.cbz
 *.cbr

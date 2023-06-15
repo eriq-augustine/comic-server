@@ -2,6 +2,8 @@ package model
 
 import (
     "time"
+
+    "github.com/eriq-augustine/comic-server/util"
 )
 
 type Series struct {
@@ -9,12 +11,45 @@ type Series struct {
     Name string
     Author *string
     Year *int
+    URL *string
+    Description *string
+    CoverImagePath *string
     MetadataSource *string
     MetadataSourceID *string
 }
 
 func EmptySeries() *Series {
     return &Series{ID: -1};
+}
+
+func (this *Series) AssumeCrawl(crawl *MetadataCrawl) {
+    this.MetadataSource = &crawl.MetadataSource;
+    this.MetadataSourceID = &crawl.MetadataSourceID;
+
+    if (this.Author == nil) {
+        this.Author = crawl.Author;
+    }
+
+    if (this.Year == nil) {
+        this.Year = crawl.Year;
+    }
+
+    if (this.URL == nil) {
+        this.URL = crawl.URL;
+    }
+
+    if (this.Description == nil) {
+        this.Description = crawl.Description;
+    }
+
+    if (this.CoverImagePath == nil) {
+        this.CoverImagePath = crawl.CoverImagePath;
+    }
+}
+
+func (this *Series) String() string {
+    text, _ := util.ToJSON(this);
+    return text;
 }
 
 // Archives are things the relate to physical files/directories on disk.
@@ -28,8 +63,12 @@ type Archive struct {
     PageCount *int
 }
 
-func EmptyArchive() *Archive {
-    return &Archive{ID: -1, Series: EmptySeries()};
+func EmptyArchive(path string) *Archive {
+    return &Archive{
+        ID: -1,
+        Path: path,
+        Series: EmptySeries()}
+    ;
 }
 
 // Assume all the attributes of other.
@@ -42,6 +81,11 @@ func (this *Archive) Assume(other *Archive) {
     this.PageCount = other.PageCount;
 }
 
+func (this *Archive) String() string {
+    text, _ := util.ToJSON(this);
+    return text;
+}
+
 type MetadataCrawlRequest struct {
     ID int
     Series *Series
@@ -50,21 +94,42 @@ type MetadataCrawlRequest struct {
 }
 
 func EmptyCrawlRequest() *MetadataCrawlRequest {
-    return &MetadataCrawlRequest{ID: -1, Series: EmptySeries()};
+    return &MetadataCrawlRequest{
+        ID: -1,
+        Series: EmptySeries(),
+    };
+}
+
+func (this *MetadataCrawlRequest) String() string {
+    text, _ := util.ToJSON(this);
+    return text;
 }
 
 type MetadataCrawl struct {
     ID int
-    MetadataSource *string
-    MetadataSourceID *string
+    MetadataSource string
+    MetadataSourceID string
     SourceSeries *Series
     Name string
     Author *string
     Year *int
-    Query string
+    URL *string
+    Description *string
+    CoverImagePath *string
     Timestamp time.Time
 }
 
-func EmptyCrawl() *MetadataCrawl {
-    return &MetadataCrawl{ID: -1, SourceSeries: EmptySeries()};
+func EmptyCrawl(source string, sourceID string) *MetadataCrawl {
+    return &MetadataCrawl{
+        ID: -1,
+        MetadataSource: source,
+        MetadataSourceID: sourceID,
+        SourceSeries: EmptySeries(),
+        Timestamp: time.Now(),
+    };
+}
+
+func (this *MetadataCrawl) String() string {
+    text, _ := util.ToJSON(this);
+    return text;
 }

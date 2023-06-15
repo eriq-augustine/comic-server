@@ -10,6 +10,9 @@ CREATE TABLE Series (
     name TEXT NOT NULL,
     author TEXT,
     year INTEGER,
+    url TEXT,
+    description TEXT,
+    cover_image_path TEXT,
     metadata_source TEXT,
     metadata_source_id TEXT
 );
@@ -50,10 +53,11 @@ CREATE TABLE MetadataCrawls (
     source TEXT NOT NULL,
     source_id TEXT NOT NULL,
     source_series_id INTEGER REFERENCES Series(id) NOT NULL,
-    query TEXT NOT NULL,
     name TEXT NOT NULL,
     author TEXT,
     year INTEGER,
-    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(source, source_id)
+    url TEXT,
+    description TEXT,
+    cover_image_path TEXT,
+    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
 );

@@ -14,8 +14,7 @@ import (
 func FromPath(path string) *model.Archive {
     var filename = filepath.Base(path);
 
-    var archive = model.EmptyArchive();
-    archive.Path = path;
+    var archive = model.EmptyArchive(path);
 
     var pattern = regexp.MustCompile(`^(.*)\s+v(\d+[a-z]?)\s+c(\d+[a-z]?)\.cbz$`);
     match := pattern.FindStringSubmatch(filename);

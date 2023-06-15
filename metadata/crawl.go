@@ -3,6 +3,7 @@ package metadata
 import (
     "fmt"
     "regexp"
+    "strconv"
 
     "github.com/rs/zerolog/log"
 
@@ -10,7 +11,7 @@ import (
     "github.com/eriq-augustine/comic-server/model"
 )
 
-type crawler func(string, string, *model.Series) ([]*model.MetadataCrawl, error);
+type crawler func(string, int, *model.Series) ([]*model.MetadataCrawl, error);
 
 var metadataSources = make(map[string]crawler);
 
@@ -47,12 +48,12 @@ func ProcessCrawlRequest(request *model.MetadataCrawlRequest) error {
     }
 
     var query = request.Query;
-    var year = "";
+    var year = -1;
 
     match := regexp.MustCompile(`^(.*)\s+\((\d{4})\)\s*$`).FindStringSubmatch(query);
     if (match != nil) {
         query = match[1];
-        year = match[2];
+        year, _ = strconv.Atoi(match[2]);
     }
 
     var errorCount = 0;
@@ -73,12 +74,38 @@ func ProcessCrawlRequest(request *model.MetadataCrawlRequest) error {
     if (len(results) > 0) {
         err = database.ResolveCrawlRequest(request, results);
         if (err != nil) {
-            return err;
+            errorCount++;
+            log.Error().Err(err).Msg("Failed to resolve crawl requests.");
+        }
+
+        err = attemptCrawlMatch(query, year, updatedSeries, results);
+        if (err != nil) {
+            errorCount++;
+            log.Error().Err(err).Msg("Failed to attemp crawl match.");
         }
     }
 
     if (errorCount > 0) {
         return fmt.Errorf("Encountered %d error while processing crawl request for '%s'.", errorCount, request.Query);
+    }
+
+    return nil;
+}
+
+// TODO(eriq): Matching is super complex, keep it simple for now.
+func attemptCrawlMatch(query string, year int, series *model.Series, crawls []*model.MetadataCrawl) error {
+    for _, crawl := range crawls {
+        if (crawl.Name != query) {
+            continue;
+        }
+
+        if ((year > 0) && (crawl.Year != nil) && (*crawl.Year != year)) {
+            continue;
+        }
+
+        series.AssumeCrawl(crawl);
+        
+        return database.UpdateSeries(series);
     }
 
     return nil;

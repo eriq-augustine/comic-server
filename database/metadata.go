@@ -7,6 +7,18 @@ import (
     "github.com/eriq-augustine/comic-server/model"
 )
 
+//go:embed sql/delete-crawl-request.sql
+var SQL_DELETE_CRAWL_REQUEST string;
+
+//go:embed sql/insert-crawl.sql
+var SQL_INSERT_CRAWL string;
+
+//go:embed sql/insert-series.sql
+var SQL_INSERT_SERIES string;
+
+//go:embed sql/insert-archive.sql
+var SQL_INSERT_ARCHIVE string;
+
 //go:embed sql/select-archive-by-path.sql
 var SQL_SELECT_ARCHIVE_BY_PATH string;
 
@@ -19,11 +31,8 @@ var SQL_SELECT_SERIES_BY_ID string;
 //go:embed sql/select-series-by-name.sql
 var SQL_SELECT_SERIES_BY_NAME string;
 
-//go:embed sql/insert-series.sql
-var SQL_INSERT_SERIES string;
-
-//go:embed sql/insert-archive.sql
-var SQL_INSERT_ARCHIVE string;
+//go:embed sql/update-series.sql
+var SQL_UPDATE_SERIES string;
 
 //go:embed sql/upsert-crawl-request.sql
 var SQL_UPSERT_CRAWL_REQUEST string;
@@ -52,7 +61,7 @@ func FetchCrawlRequests() ([]*model.MetadataCrawlRequest, error) {
     var requests = make([]*model.MetadataCrawlRequest, 0);
 
     for (rows.Next()) {
-        var request *model.MetadataCrawlRequest = model.EmptyCrawlRequest();
+        var request = model.EmptyCrawlRequest();
 
         err = rows.Scan(
                 &request.ID,
@@ -62,6 +71,9 @@ func FetchCrawlRequests() ([]*model.MetadataCrawlRequest, error) {
                 &request.Series.Name,
                 &request.Series.Author,
                 &request.Series.Year,
+                &request.Series.URL,
+                &request.Series.Description,
+                &request.Series.CoverImagePath,
                 &request.Series.MetadataSource,
                 &request.Series.MetadataSourceID,
         );
@@ -184,8 +196,7 @@ func FetchArchiveByPath(path string) (*model.Archive, error) {
     }
     defer statement.Close();
 
-    var archive *model.Archive = model.EmptyArchive();
-    archive.Path = path;
+    var archive = model.EmptyArchive(path);
 
     rows, err := statement.Query(path);
     if (err != nil) {
@@ -210,6 +221,9 @@ func FetchArchiveByPath(path string) (*model.Archive, error) {
             &archive.Series.Name,
             &archive.Series.Author,
             &archive.Series.Year,
+            &archive.Series.URL,
+            &archive.Series.Description,
+            &archive.Series.CoverImagePath,
             &archive.Series.MetadataSource,
             &archive.Series.MetadataSourceID,
     );
@@ -227,8 +241,9 @@ func FetchSeriesByName(name string) (*model.Series, error) {
     }
     defer statement.Close();
 
-    var series *model.Series = model.EmptySeries();
-    series.Name = name;
+    var series = model.Series{
+        Name: name,
+    };
 
     rows, err := statement.Query(name);
     if (err != nil) {
@@ -246,8 +261,12 @@ func FetchSeriesByName(name string) (*model.Series, error) {
 
     err = rows.Scan(
             &series.ID,
+            &series.Name,
             &series.Author,
             &series.Year,
+            &series.URL,
+            &series.Description,
+            &series.CoverImagePath,
             &series.MetadataSource,
             &series.MetadataSourceID,
     );
@@ -255,7 +274,7 @@ func FetchSeriesByName(name string) (*model.Series, error) {
         return nil, err;
     }
 
-    return series, nil;
+    return &series, nil;
 }
 
 // If the seies does not exist, an error will be returned.
@@ -266,12 +285,16 @@ func FetchSeriesByID(id int) (*model.Series, error) {
     }
     defer statement.Close();
 
-    var series *model.Series = model.EmptySeries();
+    var series = model.Series{};
 
     err = statement.QueryRow(id).Scan(
             &series.ID,
+            &series.Name,
             &series.Author,
             &series.Year,
+            &series.URL,
+            &series.Description,
+            &series.CoverImagePath,
             &series.MetadataSource,
             &series.MetadataSourceID,
     );
@@ -279,7 +302,7 @@ func FetchSeriesByID(id int) (*model.Series, error) {
         return nil, err;
     }
 
-    return series, nil;
+    return &series, nil;
 }
 
 func insertSeries(series *model.Series) error {
@@ -304,7 +327,84 @@ func insertSeries(series *model.Series) error {
     return nil;
 }
 
-func ResolveCrawlRequest(request *model.MetadataCrawlRequest, results []*model.MetadataCrawl) error {
-    // TEST
+func UpdateSeries(series *model.Series) error {
+    statement, err := db.Prepare(SQL_UPDATE_SERIES);
+    if (err != nil) {
+        return fmt.Errorf("Failed to prepare series update (%s): %w.", SQL_UPDATE_SERIES, err);
+    }
+    defer statement.Close();
+
+    _, err = statement.Exec(
+        series.Name,
+        series.Author,
+        series.Year,
+        series.URL,
+        series.Description,
+        series.CoverImagePath,
+        series.MetadataSource,
+        series.MetadataSourceID,
+        series.ID,
+    );
+
+    return err;
+}
+
+func ResolveCrawlRequest(request *model.MetadataCrawlRequest, crawls []*model.MetadataCrawl) error {
+    err := deleteCrawlRequest(request);
+    if (err != nil) {
+        return fmt.Errorf("Failed for delete crawl request: %w", err);
+    }
+
+    err = insertCrawls(crawls);
+    if (err != nil) {
+        return fmt.Errorf("Failed for insert crawl results: %w", err);
+    }
+
+    return nil;
+}
+
+func deleteCrawlRequest(request *model.MetadataCrawlRequest) error {
+    statement, err := db.Prepare(SQL_DELETE_CRAWL_REQUEST);
+    if (err != nil) {
+        return fmt.Errorf("Failed to prepare crawl request delete (%s): %w.", SQL_DELETE_CRAWL_REQUEST, err);
+    }
+    defer statement.Close();
+
+    _, err = statement.Exec(request.ID);
+    return err;
+}
+
+func insertCrawls(crawls []*model.MetadataCrawl) error {
+    transaction, err := db.Begin();
+    if (err != nil) {
+        return err;
+    }
+    defer transaction.Rollback();
+
+    statement, err := db.Prepare(SQL_INSERT_CRAWL);
+    if (err != nil) {
+        return fmt.Errorf("Failed to prepare crawl insert (%s): %w.", SQL_INSERT_CRAWL, err);
+    }
+    defer statement.Close();
+
+    for _, crawl := range crawls {
+        _, err = statement.Exec(
+            crawl.MetadataSource,
+            crawl.MetadataSourceID,
+            crawl.SourceSeries.ID,
+            crawl.Name,
+            crawl.Author,
+            crawl.Year,
+            crawl.URL,
+            crawl.Description,
+            crawl.CoverImagePath,
+        );
+
+        if (err != nil) {
+            return err;
+        }
+    }
+
+    transaction.Commit();
     return nil;
 }

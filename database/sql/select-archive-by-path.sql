@@ -7,6 +7,9 @@ SELECT
     S.name,
     S.author,
     S.year,
+    S.url,
+    S.description,
+    S.cover_image_path,
     S.metadata_source,
     S.metadata_source_id
 FROM

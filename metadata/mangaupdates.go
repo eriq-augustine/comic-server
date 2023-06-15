@@ -21,7 +21,7 @@ func init() {
     metadataSources[SOURCE_MANGA_UPDATES] = crawlMangaUdates;
 }
 
-func crawlMangaUdates(query string, year string, series *model.Series) ([]*model.MetadataCrawl, error) {
+func crawlMangaUdates(query string, year int, series *model.Series) ([]*model.MetadataCrawl, error) {
     ids, err := mangaupdatesSearch(query, year);
     if (err != nil) {
         return nil, err;
@@ -44,17 +44,17 @@ func crawlMangaUdates(query string, year string, series *model.Series) ([]*model
     return crawls, nil;
 }
 
-func mangaupdatesSearch(query string, year string) ([]string, error) {
+func mangaupdatesSearch(query string, year int) ([]string, error) {
     values := neturl.Values{};
     values.Set("search", query);
     searchURL := BASE_SEARCH_URL + "?" + values.Encode();
 
-    page, err := util.GetWithCache(searchURL);
+    pageBytes, err := util.GetWithCache(searchURL);
     if (err != nil) {
         return nil, err;
     }
 
-    doc, err := goquery.NewDocumentFromReader(strings.NewReader(page));
+    doc, err := goquery.NewDocumentFromReader(strings.NewReader(string(pageBytes)));
     if (err != nil) {
         return nil, err;
     }
@@ -81,23 +81,20 @@ func mangaupdatesSearch(query string, year string) ([]string, error) {
 func managaupdatesFetchSeries(id string) (*model.MetadataCrawl, error) {
     url := BASE_SERIES_URL + neturl.PathEscape(id);
 
-    page, err := util.GetWithCache(url);
+    pageBytes, err := util.GetWithCache(url);
     if (err != nil) {
         return nil, err;
     }
 
-    doc, err := goquery.NewDocumentFromReader(strings.NewReader(page));
+    doc, err := goquery.NewDocumentFromReader(strings.NewReader(string(pageBytes)));
     if (err != nil) {
         return nil, err;
     }
 
-    crawl := model.EmptyCrawl();
+    crawl := model.EmptyCrawl(SOURCE_MANGA_UPDATES, id);
 
-    source := SOURCE_MANGA_UPDATES;
-    crawl.MetadataSource = &source;
-    crawl.MetadataSourceID = &id;
-
-    crawl.Name = doc.Find(`span.releasestitle`).First().Text();
+    crawl.Name = cleanHTMLText(doc.Find(`span.releasestitle`).First());
+    crawl.URL = &url;
 
     // Parse out all the metadata blocks.
     metadataBlocks := make(map[string]*goquery.Selection);
@@ -105,9 +102,9 @@ func managaupdatesFetchSeries(id string) (*model.MetadataCrawl, error) {
         metadataBlocks[ele.Text()] = ele.Next().Clone();
     });
 
-    _, exists := metadataBlocks["Year"];
+    node, exists := metadataBlocks["Year"];
     if (exists) {
-        year, err := strconv.Atoi(strings.TrimSpace(metadataBlocks["Year"].Text()));
+        year, err := strconv.Atoi(strings.TrimSpace(node.Text()));
         if (err != nil) {
             log.Warn().Err(err).Str("source", SOURCE_MANGA_UPDATES).Str("id", id).Msg("Failed to parse year.");
         } else {
@@ -115,11 +112,68 @@ func managaupdatesFetchSeries(id string) (*model.MetadataCrawl, error) {
         }
     }
 
-    _, exists = metadataBlocks["Author(s)"];
+    node, exists = metadataBlocks["Author(s)"];
     if (exists) {
-        author := metadataBlocks["Author(s)"].Text();
-        crawl.Author = &author;
+        author := cleanHTMLText(node);
+
+        author = strings.ReplaceAll(author, "[Add]", "");
+        author = regexp.MustCompile(`\s*\n\s*`).ReplaceAllString(author, ", ");
+        author = regexp.MustCompile(`\s+`).ReplaceAllString(author, " ");
+
+        if (author != "") {
+            crawl.Author = &author;
+        }
+    }
+
+    node, exists = metadataBlocks["Description"];
+    if (exists) {
+        var description string;
+
+        longDescription := node.Find(`div#div_desc_more`);
+        if (longDescription.Length() > 0) {
+            longDescription.Find(`a`).Remove();
+            description = cleanHTMLText(longDescription);
+        } else {
+            description = cleanHTMLText(node);
+        }
+
+        if (description != "") {
+            crawl.Description = &description;
+        }
+    }
+
+    node, exists = metadataBlocks["Image [Report Inappropriate Content]"];
+    if (exists) {
+        imageURL, exists := node.Find(`img`).Attr("src");
+        if (exists) {
+            path, err := util.FetchImage(imageURL);
+            if (err != nil) {
+                log.Warn().Err(err).Str("source", SOURCE_MANGA_UPDATES).Str("id", id).Str("url", imageURL).Msg("Failed to fetch image.");
+            } else {
+                crawl.CoverImagePath = &path;
+            }
+        }
     }
 
     return crawl, nil;
+}
+
+func cleanHTMLText(node *goquery.Selection) string {
+    node = node.Clone();
+    html, err := node.Html();
+    if (err != nil) {
+        log.Warn().Err(err).Msg("Could not get html for text cleaning.");
+        return "";
+    }
+
+    node.SetHtml(strings.ReplaceAll(html, `<br/>`, "\n"));
+    text := node.Text();
+
+    text = strings.TrimSpace(text);
+
+    if (text == "N/A") {
+        return "";
+    }
+
+    return text;
 }
