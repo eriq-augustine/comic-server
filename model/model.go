@@ -1,10 +1,15 @@
 package model
 
 import (
+    "fmt"
+    "path/filepath"
     "time"
 
     "github.com/eriq-augustine/comic-server/util"
 )
+
+const SERIES_IMAGE_BASEDIR = "series";
+const COVER_IMAGE_FILENAME = "cover";
 
 type Series struct {
     ID int
@@ -13,7 +18,7 @@ type Series struct {
     Year *int
     URL *string
     Description *string
-    CoverImagePath *string
+    CoverImageRelPath *string
     MetadataSource *string
     MetadataSourceID *string
 }
@@ -22,7 +27,7 @@ func EmptySeries() *Series {
     return &Series{ID: -1};
 }
 
-func (this *Series) AssumeCrawl(crawl *MetadataCrawl) {
+func (this *Series) AssumeCrawl(crawl *MetadataCrawl) error {
     this.MetadataSource = &crawl.MetadataSource;
     this.MetadataSourceID = &crawl.MetadataSourceID;
 
@@ -42,9 +47,19 @@ func (this *Series) AssumeCrawl(crawl *MetadataCrawl) {
         this.Description = crawl.Description;
     }
 
-    if (this.CoverImagePath == nil) {
-        this.CoverImagePath = crawl.CoverImagePath;
+    if (this.CoverImageRelPath == nil) {
+        var filename = COVER_IMAGE_FILENAME + filepath.Ext(*crawl.CoverImageRelPath);
+        var coverRelPath = filepath.Join(SERIES_IMAGE_BASEDIR, fmt.Sprintf("%06d", this.ID), filename);
+
+        _, err := util.CopyImage(*crawl.CoverImageRelPath, coverRelPath);
+        if (err != nil) {
+            return fmt.Errorf("Failed to copy image from '%s' to '%s': %w.", *crawl.CoverImageRelPath, coverRelPath, err);
+        }
+
+        this.CoverImageRelPath = &coverRelPath;
     }
+
+    return nil;
 }
 
 func (this *Series) String() string {
@@ -115,7 +130,7 @@ type MetadataCrawl struct {
     Year *int
     URL *string
     Description *string
-    CoverImagePath *string
+    CoverImageRelPath *string
     Timestamp time.Time
 }
 

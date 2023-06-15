@@ -146,11 +146,11 @@ func managaupdatesFetchSeries(id string) (*model.MetadataCrawl, error) {
     if (exists) {
         imageURL, exists := node.Find(`img`).Attr("src");
         if (exists) {
-            path, err := util.FetchImage(imageURL);
+            _, relpath, err := util.FetchImage(imageURL);
             if (err != nil) {
                 log.Warn().Err(err).Str("source", SOURCE_MANGA_UPDATES).Str("id", id).Str("url", imageURL).Msg("Failed to fetch image.");
             } else {
-                crawl.CoverImagePath = &path;
+                crawl.CoverImageRelPath = &relpath;
             }
         }
     }

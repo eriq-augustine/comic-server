@@ -7,7 +7,7 @@ INSERT INTO MetadataCrawls (
     year,
     url,
     description,
-    cover_image_path
+    cover_image_relpath
 ) VALUES (
     ?,
     ?,

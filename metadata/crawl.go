@@ -58,7 +58,7 @@ func ProcessCrawlRequest(request *model.MetadataCrawlRequest) error {
 
     var errorCount = 0;
     var results = make([]*model.MetadataCrawl, 0);
-    
+
     for source, crawlFunction := range metadataSources {
         result, err := crawlFunction(query, year, updatedSeries);
         if (err != nil) {
@@ -103,8 +103,11 @@ func attemptCrawlMatch(query string, year int, series *model.Series, crawls []*m
             continue;
         }
 
-        series.AssumeCrawl(crawl);
-        
+        err := series.AssumeCrawl(crawl);
+        if (err != nil) {
+            return fmt.Errorf("Failed to assume crawl (%d) for series (%d): %w.", crawl.ID, series.ID, err);
+        }
+
         return database.UpdateSeries(series);
     }
 

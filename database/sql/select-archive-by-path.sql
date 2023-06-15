@@ -9,7 +9,7 @@ SELECT
     S.year,
     S.url,
     S.description,
-    S.cover_image_path,
+    S.cover_image_relpath,
     S.metadata_source,
     S.metadata_source_id
 FROM

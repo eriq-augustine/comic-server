@@ -73,7 +73,7 @@ func FetchCrawlRequests() ([]*model.MetadataCrawlRequest, error) {
                 &request.Series.Year,
                 &request.Series.URL,
                 &request.Series.Description,
-                &request.Series.CoverImagePath,
+                &request.Series.CoverImageRelPath,
                 &request.Series.MetadataSource,
                 &request.Series.MetadataSourceID,
         );
@@ -223,7 +223,7 @@ func FetchArchiveByPath(path string) (*model.Archive, error) {
             &archive.Series.Year,
             &archive.Series.URL,
             &archive.Series.Description,
-            &archive.Series.CoverImagePath,
+            &archive.Series.CoverImageRelPath,
             &archive.Series.MetadataSource,
             &archive.Series.MetadataSourceID,
     );
@@ -266,7 +266,7 @@ func FetchSeriesByName(name string) (*model.Series, error) {
             &series.Year,
             &series.URL,
             &series.Description,
-            &series.CoverImagePath,
+            &series.CoverImageRelPath,
             &series.MetadataSource,
             &series.MetadataSourceID,
     );
@@ -294,7 +294,7 @@ func FetchSeriesByID(id int) (*model.Series, error) {
             &series.Year,
             &series.URL,
             &series.Description,
-            &series.CoverImagePath,
+            &series.CoverImageRelPath,
             &series.MetadataSource,
             &series.MetadataSourceID,
     );
@@ -340,7 +340,7 @@ func UpdateSeries(series *model.Series) error {
         series.Year,
         series.URL,
         series.Description,
-        series.CoverImagePath,
+        series.CoverImageRelPath,
         series.MetadataSource,
         series.MetadataSourceID,
         series.ID,
@@ -397,7 +397,7 @@ func insertCrawls(crawls []*model.MetadataCrawl) error {
             crawl.Year,
             crawl.URL,
             crawl.Description,
-            crawl.CoverImagePath,
+            crawl.CoverImageRelPath,
         );
 
         if (err != nil) {

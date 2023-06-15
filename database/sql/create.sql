@@ -12,7 +12,7 @@ CREATE TABLE Series (
     year INTEGER,
     url TEXT,
     description TEXT,
-    cover_image_path TEXT,
+    cover_image_relpath TEXT,
     metadata_source TEXT,
     metadata_source_id TEXT
 );
@@ -58,6 +58,6 @@ CREATE TABLE MetadataCrawls (
     year INTEGER,
     url TEXT,
     description TEXT,
-    cover_image_path TEXT,
+    cover_image_relpath TEXT,
     timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
 );
