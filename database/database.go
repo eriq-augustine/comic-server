@@ -17,6 +17,10 @@ var db *sql.DB = nil;
 //go:embed sql/create.sql
 var SQL_CREATE_TABLES string;
 
+type RowScanner interface {
+    Scan(dest ...interface{}) error
+}
+
 func Open() error {
     var err error;
 	db, err = sql.Open("sqlite3", DB_PATH);

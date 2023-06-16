@@ -16,5 +16,4 @@ SELECT
 FROM
     Archives A
     JOIN Series S ON S.id = A.series_id
-WHERE A.path = ?
 ;

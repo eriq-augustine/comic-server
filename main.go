@@ -40,9 +40,18 @@ func (this *Server) ServeHTTP(response http.ResponseWriter, request *http.Reques
     // TEST: Make actual router.
 
     if (strings.HasPrefix(path, "/api/list")) {
-        data, err := json.Marshal(this.archives);
+        archives, err := database.FetchArchives();
         if (err != nil) {
-            log.Fatal().Err(err);
+            log.Error().Err(err).Msg("Failed to list archives.");
+            // TODO(eriq): Server error.
+            return;
+        }
+
+        data, err := json.Marshal(archives);
+        if (err != nil) {
+            log.Error().Err(err).Msg("Failed to serialize archives.");
+            // TODO(eriq): Server error.
+            return;
         }
 
         response.Header().Add("Content-Type", "application/json");
