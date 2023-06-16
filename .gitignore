@@ -1,13 +1,7 @@
 *.swp
 .DS_Store
 
-/comic-server
 /bin/
 /__data__/
-
-*.cbz
-*.cbr
-
-*.db
 
 /test-data/
