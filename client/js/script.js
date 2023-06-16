@@ -10,14 +10,11 @@ async function fetchAPI(url) {
 }
 
 function loadList(archives) {
-    // TEST
-    console.log(archives);
-
     let entries = document.createElement('ul');
 
     for (const archive of archives) {
         entries.insertAdjacentHTML('beforeend', `
-            <p><a href='/client/reader.html?archive=${archive.ID}'>${archive.Filename}</a></p>
+            <p><a href='/client/reader.html?archive=${archive.ID}'>${archive.Path}</a></p>
         `);
     }
 
@@ -25,7 +22,7 @@ function loadList(archives) {
 }
 
 function main() {
-    let url = '/api/list';
+    let url = '/api/archive/list';
 
     fetchAPI(url)
         .then(archives => loadList(archives))

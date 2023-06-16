@@ -13,6 +13,9 @@ var SQL_INSERT_ARCHIVE string;
 //go:embed sql/select-archives.sql
 var SQL_SELECT_ARCHIVES string;
 
+//go:embed sql/select-archive-by-id.sql
+var SQL_SELECT_ARCHIVE_BY_ID string;
+
 //go:embed sql/select-archive-by-path.sql
 var SQL_SELECT_ARCHIVE_BY_PATH string;
 
@@ -108,6 +111,21 @@ func FetchArchives() ([]*model.Archive, error) {
     }
 
     return archives, nil;
+}
+
+func FetchArchiveByID(id int) (*model.Archive, error) {
+    statement, err := db.Prepare(SQL_SELECT_ARCHIVE_BY_ID);
+    if (err != nil) {
+        return nil, err;
+    }
+    defer statement.Close();
+
+    archive, err := scanArchive(statement.QueryRow(id));
+    if (err != nil) {
+        return nil, err;
+    }
+
+    return archive, nil;
 }
 
 func FetchArchiveByPath(path string) (*model.Archive, error) {

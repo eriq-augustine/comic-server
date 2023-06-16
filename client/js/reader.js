@@ -230,7 +230,7 @@ function main() {
     let params = new URLSearchParams(window.location.search);
     let archiveID = params.get('archive');
 
-    let url = `/blob/archive/${archiveID}`;
+    let url = `/api/archive/blob/${archiveID}`;
 
     fetchZip(url)
         .then(files => reader.load(files))
