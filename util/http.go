@@ -11,10 +11,9 @@ import (
     "time"
 
     "github.com/rs/zerolog/log"
-)
 
-// TODO(eriq): Config.
-const CACHE_DIR = "__cache__";
+    "github.com/eriq-augustine/comic-server/config"
+)
 
 // Do not query a single site too quickly.
 const RATE_LIMIT_DELAY_SEC = 1
@@ -120,5 +119,5 @@ func saveCache(url string, data []byte) error {
 }
 
 func getCachePath(url string) string {
-    return filepath.Join(CACHE_DIR, url);
+    return filepath.Join(config.GetString("cache.dir"), url);
 }

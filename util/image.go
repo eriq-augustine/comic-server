@@ -3,10 +3,9 @@ package util
 import (
     "os"
     "path/filepath"
-)
 
-// TODO(eriq): Config
-const IMAGE_DIR = "__images__"
+    "github.com/eriq-augustine/comic-server/config"
+)
 
 // Returns (abspath, relpath, error).
 func FetchImage(url string) (string, string, error) {
@@ -41,5 +40,5 @@ func CopyImage(relSource string, relDest string) (string, error) {
 }
 
 func getImagePath(relpath string) string {
-    return filepath.Join(IMAGE_DIR, relpath);
+    return filepath.Join(config.GetString("image.dir"), relpath);
 }

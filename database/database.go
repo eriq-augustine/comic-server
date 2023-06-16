@@ -4,14 +4,15 @@ import (
     "database/sql"
     _ "embed"
     "fmt"
+    "os"
+    "path/filepath"
     "sync"
 
     _ "github.com/mattn/go-sqlite3"
     "github.com/rs/zerolog/log"
-)
 
-// TODO(eriq): config
-const DB_PATH = "comic-server.db"
+    "github.com/eriq-augustine/comic-server/config"
+)
 
 var db *sql.DB = nil;
 var dbMutex sync.Mutex;
@@ -31,10 +32,13 @@ func Open() error {
         return nil;
     }
 
+    var dbPath = config.GetString("db.path");
+    os.MkdirAll(filepath.Dir(dbPath), 0755);
+
     var err error;
-	db, err = sql.Open("sqlite3", DB_PATH);
+	db, err = sql.Open("sqlite3", dbPath);
 	if err != nil {
-        return fmt.Errorf("Failed to open database %v: %w.", DB_PATH, err);
+        return fmt.Errorf("Failed to open database %v: %w.", dbPath, err);
 	}
 
     return ensureTables();

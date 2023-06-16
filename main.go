@@ -1,7 +1,6 @@
 package main
 
 import (
-    "github.com/rs/zerolog"
     "github.com/rs/zerolog/log"
 
     "github.com/eriq-augustine/comic-server/database"
@@ -9,13 +8,10 @@ import (
     "github.com/eriq-augustine/comic-server/api"
 )
 
-// TODO(eriq): config.
+// TODO(eriq): Handle import in a specific bin.
 const DATA_DIR = "test-data";
 
 func main() {
-    // TODO(eriq): Config
-    zerolog.SetGlobalLevel(zerolog.DebugLevel);
-
     err := database.Open();
     if (err != nil) {
         log.Fatal().Err(err).Msg("Could not open database.");

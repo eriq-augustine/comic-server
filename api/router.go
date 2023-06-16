@@ -11,11 +11,11 @@ import (
 
     "github.com/rs/zerolog/log"
 
+    "github.com/eriq-augustine/comic-server/config"
     "github.com/eriq-augustine/comic-server/database"
 )
 
-// TODO(eriq): config.
-const PORT = 8080;
+// TODO(eriq): embed/templates.
 const CLIENT_DIR = "client";
 
 var routes = []route{
@@ -67,9 +67,11 @@ func Serve(response http.ResponseWriter, request *http.Request) {
 
 
 func StartServer() {
-    log.Info().Msgf("Serving on %d.", PORT);
+    var port = config.GetInt("server.port");
 
-    err := http.ListenAndServe(fmt.Sprintf(":%d", PORT), http.HandlerFunc(Serve));
+    log.Info().Msgf("Serving on %d.", port);
+
+    err := http.ListenAndServe(fmt.Sprintf(":%d", port), http.HandlerFunc(Serve));
     if (err != nil) {
         log.Fatal().Err(err).Msg("Server stopped.");
     }
