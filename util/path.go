@@ -15,3 +15,20 @@ func PathExists(path string) bool {
 
     return true;
 }
+
+func IsDir(path string) bool {
+    if (!PathExists(path)) {
+        return false;
+    }
+
+    stat, err := os.Stat(path);
+    if (err != nil) {
+        if os.IsNotExist(err) {
+            return false;
+        }
+
+        return false;
+    }
+
+    return stat.IsDir();
+}

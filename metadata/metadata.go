@@ -8,25 +8,24 @@ import (
 
     "github.com/eriq-augustine/comic-server/database"
     "github.com/eriq-augustine/comic-server/model"
+    "github.com/eriq-augustine/comic-server/util"
 )
 
-// Try to re-create metadata using only path information.
-func FromPath(path string) *model.Archive {
-    var filename = filepath.Base(path);
-
-    var archive = model.EmptyArchive(path);
-
-    var pattern = regexp.MustCompile(`^(.*)\s+v(\d+[a-z]?)\s+c(\d+[a-z]?)\.cbz$`);
-    match := pattern.FindStringSubmatch(filename);
-    if (match != nil) {
-        archive.Series.Name = match[1];
-        archive.Volume = &match[2];
-        archive.Chapter = &match[3];
+func ImportPath(path string) ([]*model.Archive, error) {
+    if (util.IsDir(path)) {
+        return ImportDir(path);
     }
 
-    // TODO(eriq): Page Count
+    archive, err := ImportFile(path);
+    if (err != nil) {
+        return nil, err;
+    }
 
-    return archive;
+    return []*model.Archive{archive}, nil;
+}
+
+func ImportFile(path string) (*model.Archive, error) {
+    return fromPath(path);
 }
 
 // Recursively import archive from a directory.
@@ -45,7 +44,12 @@ func ImportDir(rootPath string) ([]*model.Archive, error) {
             return nil;
         }
 
-        archives = append(archives, FromPath(path));
+        archive, err := ImportFile(path);
+        if (err != nil) {
+            return err;
+        }
+
+        archives = append(archives, archive);
         return nil;
     });
 
@@ -59,4 +63,23 @@ func ImportDir(rootPath string) ([]*model.Archive, error) {
     }
 
     return archives, nil;
+}
+
+// Try to re-create metadata using only path information.
+func fromPath(path string) (*model.Archive, error) {
+    var filename = filepath.Base(path);
+
+    var archive = model.EmptyArchive(path);
+
+    var pattern = regexp.MustCompile(`^(.*)\s+v(\d+[a-z]?)\s+c(\d+[a-z]?)\.cbz$`);
+    match := pattern.FindStringSubmatch(filename);
+    if (match != nil) {
+        archive.Series.Name = match[1];
+        archive.Volume = &match[2];
+        archive.Chapter = &match[3];
+    }
+
+    // TODO(eriq): Page Count
+
+    return archive, nil;
 }
