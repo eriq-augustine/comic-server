@@ -47,7 +47,7 @@ func (this *Series) AssumeCrawl(crawl *MetadataCrawl) error {
         this.Description = crawl.Description;
     }
 
-    if (this.CoverImageRelPath == nil) {
+    if ((this.CoverImageRelPath == nil) && (crawl.CoverImageRelPath != nil)) {
         var filename = COVER_IMAGE_FILENAME + filepath.Ext(*crawl.CoverImageRelPath);
         var coverRelPath = filepath.Join(SERIES_IMAGE_BASEDIR, fmt.Sprintf("%06d", this.ID), filename);
 

@@ -25,7 +25,17 @@ func ImportPath(path string) ([]*model.Archive, error) {
 }
 
 func ImportFile(path string) (*model.Archive, error) {
-    return fromPath(path);
+    archive, err := fromPath(path);
+    if (err != nil) {
+        return nil, fmt.Errorf("Failed to import file (%s): %w.", path, err);
+    }
+
+    err = database.PersistArchive(archive);
+    if (err != nil) {
+        return nil, fmt.Errorf("Failed to persist imported file (%s): %w.", path, err);
+    }
+
+    return archive, nil;
 }
 
 // Recursively import archive from a directory.
@@ -57,11 +67,6 @@ func ImportDir(rootPath string) ([]*model.Archive, error) {
         return nil, err;
     }
 
-    err = database.PersistArchives(archives);
-    if (err != nil) {
-        return nil, err;
-    }
-
     return archives, nil;
 }
 
@@ -71,12 +76,14 @@ func fromPath(path string) (*model.Archive, error) {
 
     var archive = model.EmptyArchive(path);
 
-    var pattern = regexp.MustCompile(`^(.*)\s+v(\d+[a-z]?)\s+c(\d+[a-z]?)\.cbz$`);
+    var pattern = regexp.MustCompile(`^(.*)\s+v(\d+[a-z]?)\s*c(\d+[a-z]?)\.cbz$`);
     match := pattern.FindStringSubmatch(filename);
     if (match != nil) {
         archive.Series.Name = match[1];
         archive.Volume = &match[2];
         archive.Chapter = &match[3];
+    } else {
+        archive.Series.Name = filename;
     }
 
     // TODO(eriq): Page Count

@@ -24,7 +24,7 @@ var SQL_SELECT_ARCHIVE_BY_PATH string;
 // each archive will have its latest metadata attatched when done.
 func PersistArchives(archives []*model.Archive) error {
     for _, archive := range archives {
-        err := persistArchive(archive);
+        err := PersistArchive(archive);
         if (err != nil) {
             return err;
         }
@@ -34,7 +34,7 @@ func PersistArchives(archives []*model.Archive) error {
 }
 
 // TODO(eriq): This function does not consider updating an existing archive.
-func persistArchive(archive *model.Archive) error {
+func PersistArchive(archive *model.Archive) error {
     if (archive.Path == "") {
         return fmt.Errorf("Persisting archive requires a Path.");
     }

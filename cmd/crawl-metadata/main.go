@@ -5,7 +5,7 @@ import (
 
     _ "github.com/eriq-augustine/comic-server/config"
     "github.com/eriq-augustine/comic-server/database"
-    "github.com/eriq-augustine/comic-server/api"
+    "github.com/eriq-augustine/comic-server/metadata"
 )
 
 func main() {
@@ -15,5 +15,9 @@ func main() {
     }
     defer database.Close();
 
-    api.StartServer();
+    // TODO(eriq): Setup as background job.
+    err = metadata.ProcessCrawlRequests();
+    if (err != nil) {
+        log.Fatal().Err(err).Msg("Failed to crawl.");
+    }
 }

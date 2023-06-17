@@ -8,6 +8,7 @@ import (
     neturl "net/url"
     "os"
     "path/filepath"
+    "strings"
     "time"
 
     "github.com/rs/zerolog/log"
@@ -16,7 +17,7 @@ import (
 )
 
 // Do not query a single site too quickly.
-const RATE_LIMIT_DELAY_SEC = 1
+const RATE_LIMIT_DELAY_SEC = 2
 var rateLimit = make(map[string]time.Time);
 
 func GetWithCache(url string) ([]byte, error) {
@@ -52,6 +53,12 @@ func ensureRateLimit(rawURL string) {
     }
 
     hostname := url.Hostname();
+
+    // Remove the subdomain.
+    parts := strings.Split(hostname, ".");
+    if (len(parts) == 3) {
+        hostname = parts[1] + "." + parts[2];
+    }
 
     _, exists := rateLimit[hostname];
     if (!exists) {
