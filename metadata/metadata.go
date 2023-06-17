@@ -6,6 +6,8 @@ import (
     "path/filepath"
     "regexp"
 
+    "github.com/rs/zerolog/log"
+
     "github.com/eriq-augustine/comic-server/database"
     "github.com/eriq-augustine/comic-server/model"
     "github.com/eriq-augustine/comic-server/util"
@@ -86,7 +88,12 @@ func fromPath(path string) (*model.Archive, error) {
         archive.Series.Name = filename;
     }
 
-    // TODO(eriq): Page Count
+    pageCount, err := util.ZipImageCount(path);
+    if (err != nil) {
+        log.Warn().Err(err).Str("path", path).Msg("Failed to get page count.");
+    } else {
+        archive.PageCount = &pageCount;
+    }
 
     return archive, nil;
 }
