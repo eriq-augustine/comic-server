@@ -11,7 +11,7 @@ import (
 func FetchImage(url string) (string, string, error) {
     var relpath = filepath.Clean(url);
 
-    path, err := filepath.Abs(getImagePath(relpath));
+    path, err := filepath.Abs(GetImagePath(relpath));
     if (err != nil) {
         return "", "", err;
     }
@@ -32,13 +32,13 @@ func FetchImage(url string) (string, string, error) {
 }
 
 func CopyImage(relSource string, relDest string) (string, error) {
-    source := getImagePath(relSource);
-    dest := getImagePath(relDest);
+    source := GetImagePath(relSource);
+    dest := GetImagePath(relDest);
 
     err := CopyFile(source, dest);
     return dest, err;
 }
 
-func getImagePath(relpath string) string {
+func GetImagePath(relpath string) string {
     return filepath.Join(config.GetString("image.dir"), relpath);
 }

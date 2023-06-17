@@ -10,6 +10,9 @@ import (
 //go:embed sql/insert-series.sql
 var SQL_INSERT_SERIES string;
 
+//go:embed sql/select-series.sql
+var SQL_SELECT_SERIES string;
+
 //go:embed sql/select-series-by-id.sql
 var SQL_SELECT_SERIES_BY_ID string;
 
@@ -19,36 +22,25 @@ var SQL_SELECT_SERIES_BY_NAME string;
 //go:embed sql/update-series.sql
 var SQL_UPDATE_SERIES string;
 
-// If a series already exists with a 100% name match, then use that.
-func ensureSeries(archive *model.Archive) error {
-    if (archive.Series == nil) {
-        return fmt.Errorf("Cannot ensure a nil series.");
-    }
-
-    if (archive.Series.Name == "") {
-        return fmt.Errorf("Cannot ensure a series without a name.");
-    }
-
-    if (archive.Series.ID != -1) {
-        return nil;
-    }
-
-    series, err := FetchSeriesByName(archive.Series.Name);
+func FetchSeries() ([]*model.Series, error) {
+    rows, err := db.Query(SQL_SELECT_SERIES);
     if (err != nil) {
-        return err;
+        return nil, err;
+    }
+    defer rows.Close();
+
+    var allSeries = make([]*model.Series, 0);
+
+    for (rows.Next()) {
+        series, err := scanSeries(rows);
+        if (err != nil) {
+            return nil, err;
+        }
+
+        allSeries = append(allSeries, series);
     }
 
-    if (series != nil) {
-        archive.Series = series;
-        return nil;
-    }
-
-    err = insertSeries(archive.Series);
-    if (err != nil) {
-        return err;
-    }
-
-    return RequestMetadataCrawl(archive.Series);
+    return allSeries, nil;
 }
 
 func FetchSeriesByName(name string) (*model.Series, error) {
@@ -138,6 +130,38 @@ func UpdateSeries(series *model.Series) error {
     );
 
     return err;
+}
+
+// If a series already exists with a 100% name match, then use that.
+func ensureSeries(archive *model.Archive) error {
+    if (archive.Series == nil) {
+        return fmt.Errorf("Cannot ensure a nil series.");
+    }
+
+    if (archive.Series.Name == "") {
+        return fmt.Errorf("Cannot ensure a series without a name.");
+    }
+
+    if (archive.Series.ID != -1) {
+        return nil;
+    }
+
+    series, err := FetchSeriesByName(archive.Series.Name);
+    if (err != nil) {
+        return err;
+    }
+
+    if (series != nil) {
+        archive.Series = series;
+        return nil;
+    }
+
+    err = insertSeries(archive.Series);
+    if (err != nil) {
+        return err;
+    }
+
+    return RequestMetadataCrawl(archive.Series);
 }
 
 func scanSeries(scanner RowScanner) (*model.Series, error) {
