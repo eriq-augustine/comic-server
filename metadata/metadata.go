@@ -75,6 +75,10 @@ func ImportDir(rootPath string) ([]*model.Archive, error) {
 // Try to re-create metadata using only path information.
 func fromPath(path string) (*model.Archive, error) {
     var filename = filepath.Base(path);
+    path, err := filepath.Abs(path);
+    if (err != nil) {
+        return nil, fmt.Errorf("Could not form abs path from '%s': %w.", path, err);
+    }
 
     var archive = model.EmptyArchive(path);
 
