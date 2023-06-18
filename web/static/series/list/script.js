@@ -2,21 +2,7 @@
 
 const DEFAULT_SERIES_COVER_IMAGE = '/static/images/default_series_cover.png';
 
-async function fetchAPI(url, loadingQuery, loadingMessage) {
-    // TODO(eriq): Have a loading element and message.
-    if (loadingMessage) {
-        console.log(loadingMessage);
-    }
-
-    const response = await fetch(url);
-    if (response.status != 200) {
-        throw new Error(`Fetch returned error status: "${response.status}".`);
-    }
-
-    return response.json();
-}
-
-function renderSeries(allSeries) {
+function render(allSeries) {
     allSeries.sort(function(a, b) {
         return a.Name.localeCompare(b.Name);
     });
@@ -37,7 +23,7 @@ function renderSeries(allSeries) {
 
         entries.insertAdjacentHTML('beforeend', `
             <div class='series-entry' data-id='${series.ID}'>
-                <a class='series-thumbnail' href='/static/series/view.html?series=${series.ID}'>
+                <a class='series-thumbnail' href='/static/series/view/index.html?series=${series.ID}'>
                     <img src='${image}' loading='lazy' alt='${series.Name}' />
                     <div class='series-thumbnail-title'>
                         ${title}
@@ -54,7 +40,7 @@ function main() {
     let url = '/api/series/list';
 
     fetchAPI(url, '.page-contents', 'Fetching series.')
-        .then(series => renderSeries(series))
+        .then(allSeries => render(allSeries))
         .catch(error => {
             console.error(error);
         });
