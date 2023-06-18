@@ -11,6 +11,9 @@ import (
 )
 
 var routes = []route{
+    newRedirect("GET", `/static/index.html`, `/static/series/list/index.html`),
+    newRedirect("GET", `/static/series/index.html`, `/static/series/list/index.html`),
+
     newRoute("GET", `/api/archive/list`, handleArchiveListAll),
     newRoute("GET", `/api/archive/blob/(\d+)`, handleArchiveBlob),
     newRoute("GET", `/api/image/blob/(.*)`, handleImageBlob),
@@ -42,6 +45,18 @@ func StartServer() {
 
 func newRoute(method string, pattern string, handler routeHandler) route {
     return route{method, regexp.MustCompile("^" + pattern + "$"), handler};
+}
+
+func newRedirect(method string, pattern string, target string) route {
+    redirectFunc := func(matches []string, response http.ResponseWriter, request *http.Request) error {
+        return handleRedirect(target, matches, response, request);
+    };
+    return route{method, regexp.MustCompile("^" + pattern + "$"), redirectFunc};
+}
+
+func handleRedirect(target string, matches []string, response http.ResponseWriter, request *http.Request) error {
+    http.Redirect(response, request, target, 301);
+    return nil;
 }
 
 func serve(response http.ResponseWriter, request *http.Request) {
