@@ -16,6 +16,7 @@ var routes = []route{
     newRoute("GET", `/api/image/blob/(.*)`, handleImageBlob),
     newRoute("GET", `/api/series/(\d+)`, handleSeries),
     newRoute("GET", `/api/series/list`, handleSeriesListAll),
+    newRoute("GET", `/client`, handleClient),
     newRoute("GET", `/client/.*`, handleClient),
 }
 

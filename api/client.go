@@ -1,16 +1,48 @@
 package api
 
 import (
+    "embed"
+    "fmt"
+    "io"
     "net/http"
+    "os"
     "path/filepath"
     "strings"
 )
 
-// TODO(eriq): embed/templates.
-const CLIENT_DIR = "client";
+//go:embed client
+var clientDir embed.FS
 
 func handleClient(matches []string, response http.ResponseWriter, request *http.Request) error {
-    var targetPath = filepath.Join(CLIENT_DIR, strings.TrimPrefix(request.URL.Path, "/client/"));
-    http.ServeFile(response, request, targetPath);
+    // Remove leading and trailing slashes.
+    path := strings.Trim(request.URL.Path, "/");
+
+    file, err := clientDir.Open(path);
+    if (err != nil) {
+        if (os.IsNotExist(err)) {
+            http.NotFound(response, request);
+            return nil;
+        }
+
+        return fmt.Errorf("Error opening client file '%s': %w.", path, err);
+    }
+    defer file.Close();
+
+    stat, err := file.Stat();
+    if (err != nil) {
+        return fmt.Errorf("Failed to stat client file (%s): %w.", path, err);
+    }
+
+    // Don't serve dirs. 301 to index.html.
+    if (stat.IsDir()) {
+        path = filepath.Join("/", path, "index.html");
+        http.Redirect(response, request, path, 301);
+        return nil;
+    }
+
+    // embed guarentees that embed.FS.Open() on a file returns an io.ReadSeeker.
+    readseeker, _ := file.(io.ReadSeeker);
+    http.ServeContent(response, request, path, stat.ModTime(), readseeker);
+
     return nil;
 }
