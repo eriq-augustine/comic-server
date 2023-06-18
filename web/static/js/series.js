@@ -14,7 +14,7 @@ function loadList(archives) {
 
     for (const archive of archives) {
         entries.insertAdjacentHTML('beforeend', `
-            <p><a href='/client/reader.html?archive=${archive.ID}'>${archive.Path}</a></p>
+            <p><a href='/static/reader.html?archive=${archive.ID}'>${archive.Path}</a></p>
         `);
     }
 

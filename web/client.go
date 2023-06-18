@@ -1,4 +1,4 @@
-package api
+package web
 
 import (
     "embed"
@@ -10,27 +10,27 @@ import (
     "strings"
 )
 
-//go:embed client
-var clientDir embed.FS
+//go:embed static
+var staticDir embed.FS
 
-func handleClient(matches []string, response http.ResponseWriter, request *http.Request) error {
+func handleStatic(matches []string, response http.ResponseWriter, request *http.Request) error {
     // Remove leading and trailing slashes.
     path := strings.Trim(request.URL.Path, "/");
 
-    file, err := clientDir.Open(path);
+    file, err := staticDir.Open(path);
     if (err != nil) {
         if (os.IsNotExist(err)) {
             http.NotFound(response, request);
             return nil;
         }
 
-        return fmt.Errorf("Error opening client file '%s': %w.", path, err);
+        return fmt.Errorf("Error opening static file '%s': %w.", path, err);
     }
     defer file.Close();
 
     stat, err := file.Stat();
     if (err != nil) {
-        return fmt.Errorf("Failed to stat client file (%s): %w.", path, err);
+        return fmt.Errorf("Failed to stat static file (%s): %w.", path, err);
     }
 
     // Don't serve dirs. 301 to index.html.

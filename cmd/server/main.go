@@ -5,7 +5,7 @@ import (
 
     _ "github.com/eriq-augustine/comic-server/config"
     "github.com/eriq-augustine/comic-server/database"
-    "github.com/eriq-augustine/comic-server/api"
+    "github.com/eriq-augustine/comic-server/web"
 )
 
 func main() {
@@ -15,5 +15,5 @@ func main() {
     }
     defer database.Close();
 
-    api.StartServer();
+    web.StartServer();
 }

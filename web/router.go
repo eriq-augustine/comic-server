@@ -1,4 +1,4 @@
-package api
+package web
 
 import (
     "fmt"
@@ -16,8 +16,8 @@ var routes = []route{
     newRoute("GET", `/api/image/blob/(.*)`, handleImageBlob),
     newRoute("GET", `/api/series/(\d+)`, handleSeries),
     newRoute("GET", `/api/series/list`, handleSeriesListAll),
-    newRoute("GET", `/client`, handleClient),
-    newRoute("GET", `/client/.*`, handleClient),
+    newRoute("GET", `/static`, handleStatic),
+    newRoute("GET", `/static/.*`, handleStatic),
 }
 
 type routeHandler func(matches []string, response http.ResponseWriter, request *http.Request) error;
