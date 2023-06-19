@@ -53,7 +53,7 @@ CREATE TABLE MetadataCrawls (
     id INTEGER PRIMARY KEY,
     source TEXT NOT NULL,
     source_id TEXT NOT NULL,
-    source_series_id INTEGER REFERENCES Series(id) NOT NULL,
+    origin_series_id INTEGER REFERENCES Series(id) NOT NULL,
     name TEXT NOT NULL,
     author TEXT,
     year INTEGER,

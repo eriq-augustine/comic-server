@@ -1,7 +1,7 @@
 INSERT INTO MetadataCrawls (
     source,
     source_id,
-    source_series_id,
+    origin_series_id,
     name,
     author,
     year,

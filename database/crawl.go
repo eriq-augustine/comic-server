@@ -13,11 +13,41 @@ var SQL_DELETE_CRAWL_REQUEST string;
 //go:embed sql/insert-crawl.sql
 var SQL_INSERT_CRAWL string;
 
+//go:embed sql/select-crawls-by-series.sql
+var SQL_SELECT_CRAWLS_BY_SERIES string;
+
 //go:embed sql/select-crawl-requests.sql
 var SQL_SELECT_CRAWL_REQUESTS string;
 
 //go:embed sql/upsert-crawl-request.sql
 var SQL_UPSERT_CRAWL_REQUEST string;
+
+func FetchCrawlsBySourceSeries(seriesID int) ([]*model.MetadataCrawl, error) {
+    statement, err := db.Prepare(SQL_SELECT_CRAWLS_BY_SERIES);
+    if (err != nil) {
+        return nil, err;
+    }
+    defer statement.Close();
+
+    rows, err := statement.Query(seriesID);
+    if (err != nil) {
+        return nil, err;
+    }
+    defer rows.Close();
+
+    crawls := make([]*model.MetadataCrawl, 0);
+
+    for (rows.Next()) {
+        crawl, _, err := scanCrawlNoSeries(rows);
+        if (err != nil) {
+            return nil, err;
+        }
+
+        crawls = append(crawls, crawl);
+    }
+
+    return crawls, nil;
+}
 
 func FetchCrawlRequests() ([]*model.MetadataCrawlRequest, error) {
     rows, err := db.Query(SQL_SELECT_CRAWL_REQUESTS);
@@ -124,4 +154,25 @@ func insertCrawls(crawls []*model.MetadataCrawl) error {
 
     transaction.Commit();
     return nil;
+}
+
+func scanCrawlNoSeries(scanner RowScanner) (*model.MetadataCrawl, int, error) {
+    var crawl = model.MetadataCrawl{};
+    var seriesID int;
+
+    err := scanner.Scan(
+            &crawl.ID,
+            &crawl.MetadataSource,
+            &crawl.MetadataSourceID,
+            &seriesID,
+            &crawl.Name,
+            &crawl.Author,
+            &crawl.Year,
+            &crawl.URL,
+            &crawl.Description,
+            &crawl.CoverImageRelPath,
+            &crawl.Timestamp,
+    );
+
+    return &crawl, seriesID, err;
 }

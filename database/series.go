@@ -19,25 +19,25 @@ var SQL_SELECT_SERIES_BY_ID string;
 //go:embed sql/select-series-by-name.sql
 var SQL_SELECT_SERIES_BY_NAME string;
 
+//go:embed sql/select-series-unmatched.sql
+var SQL_SELECT_SERIES_UNMATCHED string;
+
 //go:embed sql/update-series.sql
 var SQL_UPDATE_SERIES string;
 
 func FetchSeries() ([]*model.Series, error) {
-    rows, err := db.Query(SQL_SELECT_SERIES);
+    allSeries, err := fetchNoArgumentSeries(SQL_SELECT_SERIES);
     if (err != nil) {
-        return nil, err;
+        return nil, fmt.Errorf("Failed to fetch all series: %w.", err);
     }
-    defer rows.Close();
 
-    var allSeries = make([]*model.Series, 0);
+    return allSeries, nil;
+}
 
-    for (rows.Next()) {
-        series, err := scanSeries(rows);
-        if (err != nil) {
-            return nil, err;
-        }
-
-        allSeries = append(allSeries, series);
+func FetchUnmatchedSeries() ([]*model.Series, error) {
+    allSeries, err := fetchNoArgumentSeries(SQL_SELECT_SERIES_UNMATCHED);
+    if (err != nil) {
+        return nil, fmt.Errorf("Failed to fetch all unmatched series: %w.", err);
     }
 
     return allSeries, nil;
@@ -130,6 +130,27 @@ func UpdateSeries(series *model.Series) error {
     );
 
     return err;
+}
+
+func fetchNoArgumentSeries(query string) ([]*model.Series, error) {
+    rows, err := db.Query(query);
+    if (err != nil) {
+        return nil, err;
+    }
+    defer rows.Close();
+
+    var allSeries = make([]*model.Series, 0);
+
+    for (rows.Next()) {
+        series, err := scanSeries(rows);
+        if (err != nil) {
+            return nil, err;
+        }
+
+        allSeries = append(allSeries, series);
+    }
+
+    return allSeries, nil;
 }
 
 // If a series already exists with a 100% name match, then use that.

@@ -15,7 +15,7 @@ import (
 
 func main() {
     target := parseArgs();
-    
+
     err := database.Open();
     if (err != nil) {
         log.Fatal().Err(err).Msg("Could not open database.");
