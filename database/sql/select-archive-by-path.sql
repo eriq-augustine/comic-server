@@ -7,6 +7,7 @@ SELECT
     A.cover_image_relpath,
     S.id,
     S.name,
+    S.alt_names,
     S.author,
     S.year,
     S.url,

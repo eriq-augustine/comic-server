@@ -207,6 +207,7 @@ func scanArchive(scanner RowScanner) (*model.Archive, error) {
             &archive.CoverImageRelPath,
             &archive.Series.ID,
             &archive.Series.Name,
+            &archive.Series.AltNames,
             &archive.Series.Author,
             &archive.Series.Year,
             &archive.Series.URL,

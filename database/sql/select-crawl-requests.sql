@@ -4,6 +4,7 @@ SELECT
     M.timestamp,
     S.id,
     S.name,
+    S.alt_names,
     S.author,
     S.year,
     S.url,

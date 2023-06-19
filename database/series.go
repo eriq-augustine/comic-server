@@ -119,6 +119,7 @@ func UpdateSeries(series *model.Series) error {
 
     _, err = statement.Exec(
         series.Name,
+        series.AltNames,
         series.Author,
         series.Year,
         series.URL,
@@ -191,6 +192,7 @@ func scanSeries(scanner RowScanner) (*model.Series, error) {
     err := scanner.Scan(
             &series.ID,
             &series.Name,
+            &series.AltNames,
             &series.Author,
             &series.Year,
             &series.URL,

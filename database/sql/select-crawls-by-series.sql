@@ -4,6 +4,7 @@ SELECT
     source_id,
     origin_series_id,
     name,
+    alt_names,
     author,
     year,
     url,

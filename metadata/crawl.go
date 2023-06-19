@@ -91,25 +91,3 @@ func ProcessCrawlRequest(request *model.MetadataCrawlRequest) error {
 
     return nil;
 }
-
-// TODO(eriq): Matching is super complex, keep it simple for now.
-func attemptCrawlMatch(query string, year int, series *model.Series, crawls []*model.MetadataCrawl) error {
-    for _, crawl := range crawls {
-        if (crawl.Name != query) {
-            continue;
-        }
-
-        if ((year > 0) && (crawl.Year != nil) && (*crawl.Year != year)) {
-            continue;
-        }
-
-        err := series.AssumeCrawl(crawl);
-        if (err != nil) {
-            return fmt.Errorf("Failed to assume crawl (%d) for series (%d): %w.", crawl.ID, series.ID, err);
-        }
-
-        return database.UpdateSeries(series);
-    }
-
-    return nil;
-}

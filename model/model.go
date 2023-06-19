@@ -14,6 +14,7 @@ const COVER_IMAGE_FILENAME = "cover";
 type Series struct {
     ID int
     Name string
+    AltNames *string
     Author *string
     Year *int
     URL *string
@@ -30,6 +31,10 @@ func EmptySeries() *Series {
 func (this *Series) AssumeCrawl(crawl *MetadataCrawl) error {
     this.MetadataSource = &crawl.MetadataSource;
     this.MetadataSourceID = &crawl.MetadataSourceID;
+
+    if (this.AltNames == nil) {
+        this.AltNames = crawl.AltNames;
+    }
 
     if (this.Author == nil) {
         this.Author = crawl.Author;
@@ -128,6 +133,7 @@ type MetadataCrawl struct {
     MetadataSourceID string
     SourceSeries *Series
     Name string
+    AltNames *string
     Author *string
     Year *int
     URL *string

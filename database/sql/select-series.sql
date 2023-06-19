@@ -1,6 +1,7 @@
 SELECT
     id,
     name,
+    alt_names,
     author,
     year,
     url,

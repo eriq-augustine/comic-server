@@ -1,6 +1,7 @@
 package metadata
 
 import (
+    "fmt"
     neturl "net/url"
     "regexp"
     "strconv"
@@ -24,7 +25,7 @@ func init() {
 func crawlMangaUdates(query string, year int, series *model.Series) ([]*model.MetadataCrawl, error) {
     ids, err := mangaupdatesSearch(query, year);
     if (err != nil) {
-        return nil, err;
+        return nil, fmt.Errorf("Failed to do manga updates search for (%s (%d)): %w.", query, year, err);
     }
 
     crawls := make([]*model.MetadataCrawl, 0);
@@ -122,6 +123,21 @@ func managaupdatesFetchSeries(id string) (*model.MetadataCrawl, error) {
 
         if (author != "") {
             crawl.Author = &author;
+        }
+    }
+
+    node, exists = metadataBlocks["Associated Names"];
+    if (exists) {
+        rawAltNamesString := cleanHTMLText(node);
+
+        altNames := make([]string, 0);
+        for _, altName := range strings.Split(rawAltNamesString, "\n") {
+            altNames = append(altNames, strings.TrimSpace(altName));
+        }
+
+        if (len(altNames) > 0) {
+            altNamesString := util.UnsafeJoin(altNames);
+            crawl.AltNames = &altNamesString;
         }
     }
 

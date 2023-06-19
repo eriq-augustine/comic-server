@@ -8,6 +8,7 @@ DROP TABLE IF EXISTS Series;
 CREATE TABLE Series (
     id INTEGER PRIMARY KEY,
     name TEXT NOT NULL,
+    alt_names TEXT,
     author TEXT,
     year INTEGER,
     url TEXT,
@@ -55,6 +56,7 @@ CREATE TABLE MetadataCrawls (
     source_id TEXT NOT NULL,
     origin_series_id INTEGER REFERENCES Series(id) NOT NULL,
     name TEXT NOT NULL,
+    alt_names TEXT,
     author TEXT,
     year INTEGER,
     url TEXT,

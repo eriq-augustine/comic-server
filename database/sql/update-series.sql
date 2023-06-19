@@ -1,6 +1,7 @@
 UPDATE SERIES
 SET
     name = ?,
+    alt_names = ?,
     author = ?,
     year = ?,
     url = ?,
