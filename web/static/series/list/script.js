@@ -1,7 +1,5 @@
 'use strict';
 
-const DEFAULT_SERIES_COVER_IMAGE = '/static/images/default_series_cover.png';
-
 function render(allSeries) {
     allSeries.sort(function(a, b) {
         return a.Name.localeCompare(b.Name);
@@ -11,21 +9,16 @@ function render(allSeries) {
     entries.className = 'series-list';
 
     for (const series of allSeries) {
-        let image = DEFAULT_SERIES_COVER_IMAGE;
-        if (series.CoverImageRelPath) {
-            image = '/api/image/blob/' + series.CoverImageRelPath;
-        }
-
         let title = series.Name;
         if (series.Year) {
             title += ` (${series.Year})`;
         }
 
         entries.insertAdjacentHTML('beforeend', `
-            <div class='series-entry' data-id='${series.ID}'>
-                <a class='series-thumbnail' href='/static/series/view/index.html?series=${series.ID}'>
-                    <img src='${image}' loading='lazy' alt='${series.Name}' />
-                    <div class='series-thumbnail-title'>
+            <div class='series-entry preview' data-id='${series.ID}'>
+                <a href='/static/series/view/index.html?series=${series.ID}'>
+                    <img src='${getSeriesCoverPath(series)}' loading='lazy' alt='${series.Name}' />
+                    <div class='title'>
                         ${title}
                     </div>
                 </a>

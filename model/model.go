@@ -76,6 +76,7 @@ type Archive struct {
     Volume *string
     Chapter *string
     PageCount *int
+    CoverImageRelPath *string
 }
 
 func EmptyArchive(path string) *Archive {
@@ -94,6 +95,7 @@ func (this *Archive) Assume(other *Archive) {
     this.Volume = other.Volume;
     this.Chapter = other.Chapter;
     this.PageCount = other.PageCount;
+    this.CoverImageRelPath = other.CoverImageRelPath;
 }
 
 func (this *Archive) String() string {

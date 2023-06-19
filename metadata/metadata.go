@@ -5,6 +5,7 @@ import (
     "io/fs"
     "path/filepath"
     "regexp"
+    "strings"
 
     "github.com/rs/zerolog/log"
 
@@ -82,7 +83,7 @@ func fromPath(path string) (*model.Archive, error) {
 
     var archive = model.EmptyArchive(path);
 
-    var pattern = regexp.MustCompile(`^(.*)\s+v(\d+[a-z]?)\s*c(\d+[a-z]?)\.cbz$`);
+    var pattern = regexp.MustCompile(`^(.*)\s+v(\d+[a-z]?)\s*c(\d+[a-z]?)\.(?i:cbz|zip)$`);
     match := pattern.FindStringSubmatch(filename);
     if (match != nil) {
         archive.Series.Name = match[1];
@@ -92,11 +93,25 @@ func fromPath(path string) (*model.Archive, error) {
         archive.Series.Name = filename;
     }
 
-    pageCount, err := util.ZipImageCount(path);
-    if (err != nil) {
-        log.Warn().Err(err).Str("path", path).Msg("Failed to get page count.");
-    } else {
-        archive.PageCount = &pageCount;
+    ext := filepath.Ext(strings.ToLower(filename));
+    switch ext {
+    case ".zip":
+        pageCount, err := util.ZipImageCount(path);
+        if (err != nil) {
+            log.Warn().Err(err).Str("path", path).Msg("Failed to get zip page count.");
+        } else {
+            archive.PageCount = &pageCount;
+        }
+    case ".cbz":
+        pageCount, coverImagePath, err := util.CBZInfo(path);
+        if (err != nil) {
+            log.Warn().Err(err).Str("path", path).Msg("Failed to get CBZ image info.");
+        } else {
+            archive.PageCount = &pageCount;
+            archive.CoverImageRelPath = &coverImagePath;
+        }
+    default:
+        return nil, fmt.Errorf("Unrecognized archive type (%s), can only use cbz and zip.", ext);
     }
 
     return archive, nil;

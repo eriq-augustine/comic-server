@@ -13,6 +13,9 @@ var SQL_INSERT_ARCHIVE string;
 //go:embed sql/select-archives.sql
 var SQL_SELECT_ARCHIVES string;
 
+//go:embed sql/select-archives-by-series.sql
+var SQL_SELECT_ARCHIVES_BY_SERIES string;
+
 //go:embed sql/select-archive-by-id.sql
 var SQL_SELECT_ARCHIVE_BY_ID string;
 
@@ -76,7 +79,15 @@ func insertArchive(archive *model.Archive) error {
     }
     defer statement.Close();
 
-    result, err := statement.Exec(archive.Series.ID, archive.Path, archive.Volume, archive.Chapter, archive.PageCount);
+    result, err := statement.Exec(
+        archive.Series.ID,
+        archive.Path,
+        archive.Volume,
+        archive.Chapter,
+        archive.PageCount,
+        archive.CoverImageRelPath,
+    );
+
     if (err != nil) {
         return err;
     }
@@ -157,6 +168,33 @@ func FetchArchiveByPath(path string) (*model.Archive, error) {
     return archive, nil;
 }
 
+func FetchArchivesBySeries(seriesID int) ([]*model.Archive, error) {
+    statement, err := db.Prepare(SQL_SELECT_ARCHIVES_BY_SERIES);
+    if (err != nil) {
+        return nil, err;
+    }
+    defer statement.Close();
+
+    rows, err := statement.Query(seriesID);
+    if (err != nil) {
+        return nil, err;
+    }
+    defer rows.Close();
+
+    var archives = make([]*model.Archive, 0);
+
+    for (rows.Next()) {
+        archive, _, err := scanArchiveNoSeries(rows);
+        if (err != nil) {
+            return nil, err;
+        }
+
+        archives = append(archives, archive);
+    }
+
+    return archives, nil;
+}
+
 func scanArchive(scanner RowScanner) (*model.Archive, error) {
     var archive = model.EmptyArchive("");
 
@@ -166,6 +204,7 @@ func scanArchive(scanner RowScanner) (*model.Archive, error) {
             &archive.Volume,
             &archive.Chapter,
             &archive.PageCount,
+            &archive.CoverImageRelPath,
             &archive.Series.ID,
             &archive.Series.Name,
             &archive.Series.Author,
@@ -178,4 +217,21 @@ func scanArchive(scanner RowScanner) (*model.Archive, error) {
     );
 
     return archive, err;
+}
+
+func scanArchiveNoSeries(scanner RowScanner) (*model.Archive, int, error) {
+    var archive = model.Archive{};
+    var seriesID int;
+
+    err := scanner.Scan(
+            &archive.ID,
+            &seriesID,
+            &archive.Path,
+            &archive.Volume,
+            &archive.Chapter,
+            &archive.PageCount,
+            &archive.CoverImageRelPath,
+    );
+
+    return &archive, seriesID, err;
 }

@@ -23,7 +23,8 @@ CREATE TABLE Archives (
     path TEXT NOT NULL UNIQUE,
     volume TEXT,
     chapter TEXT,
-    page_count INTEGER
+    page_count INTEGER,
+    cover_image_relpath TEXT
 );
 
 CREATE TABLE RelatedSeries (

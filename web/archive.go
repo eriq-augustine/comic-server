@@ -36,3 +36,21 @@ func handleArchiveBlob(matches []string, response http.ResponseWriter, request *
     http.ServeFile(response, request, archive.Path);
     return nil;
 }
+
+func handleArchivesBySeries(matches []string, response http.ResponseWriter, request *http.Request) error {
+    id, _ := strconv.Atoi(matches[1]);
+
+    archives, err := database.FetchArchivesBySeries(id);
+    if (err != nil) {
+        return fmt.Errorf("Failed to list archives by series (%d): %w.", id, err);
+    }
+
+    data, err := json.Marshal(archives);
+    if (err != nil) {
+        return fmt.Errorf("Failed to serialize archives: %w.", err);
+    }
+
+    response.Header().Add("Content-Type", "application/json");
+    response.Write(data);
+    return nil;
+}

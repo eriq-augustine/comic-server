@@ -1,0 +1,32 @@
+.series-info {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 10px;
+
+    color: white;
+    text-align: center;
+}
+
+.series-info a {
+    color: white;
+    text-decoration: none;
+}
+
+.description {
+    white-space: pre-line;
+}
+
+.archive-list {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    align-items: center;
+    align-content: flex-start;
+    gap: 20px;
+
+    padding: 20px;
+}

@@ -31,6 +31,12 @@ func FetchImage(url string) (string, string, error) {
     return path, relpath, err;
 }
 
+func WriteImage(data []byte, relpath string) (error) {
+    path := GetImagePath(relpath);
+    os.MkdirAll(filepath.Dir(path), 0755);
+    return os.WriteFile(path, data, 0644);
+}
+
 func CopyImage(relSource string, relDest string) (string, error) {
     source := GetImagePath(relSource);
     dest := GetImagePath(relDest);

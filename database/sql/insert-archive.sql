@@ -3,8 +3,10 @@ INSERT INTO Archives (
     path,
     volume,
     chapter,
-    page_count
+    page_count,
+    cover_image_relpath
 ) VALUES (
+    ?,
     ?,
     ?,
     ?,

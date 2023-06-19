@@ -4,6 +4,7 @@ SELECT
     A.volume,
     A.chapter,
     A.page_count,
+    A.cover_image_relpath,
     S.id,
     S.name,
     S.author,

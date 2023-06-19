@@ -29,3 +29,31 @@ html {
     color: white;
     text-decoration: none;
 }
+
+.preview {
+    height: 275px;
+    width: 165px;
+}
+
+.preview a {
+    height: 100%;
+    width: 100%;
+
+    text-align: center;
+    color: white;
+    text-decoration: none;
+    font-size: 0.9em;
+}
+
+.preview img {
+    height: 230px;
+    width: 100%;
+    object-fit: fill;
+    border-radius: 10px;
+}
+
+.preview .title {
+    height: 40px;
+    width: 100%;
+    margin-top: 5px;
+}
