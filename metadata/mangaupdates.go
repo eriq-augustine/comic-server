@@ -105,10 +105,12 @@ func managaupdatesFetchSeries(id string) (*model.MetadataCrawl, error) {
 
     node, exists := metadataBlocks["Year"];
     if (exists) {
-        year, err := strconv.Atoi(strings.TrimSpace(node.Text()));
+        year, err := parseYear(node.Text());
         if (err != nil) {
-            log.Warn().Err(err).Str("source", SOURCE_MANGA_UPDATES).Str("id", id).Msg("Failed to parse year.");
-        } else {
+            log.Warn().Err(err).Str("source", SOURCE_MANGA_UPDATES).Str("id", id).Str("text", node.Text()).Msg("Failed to parse year.");
+        }
+
+        if (year != 0) {
             crawl.Year = &year;
         }
     }
@@ -192,4 +194,18 @@ func cleanHTMLText(node *goquery.Selection) string {
     }
 
     return text;
+}
+
+func parseYear(text string) (int, error) {
+    yearText := strings.TrimSpace(text);
+    if (yearText == "N/A") {
+        return 0, nil;
+    }
+
+    match := regexp.MustCompile(`^(\d{4})(-(\d{4}))?$`).FindStringSubmatch(yearText);
+    if (match == nil) {
+        return 0, fmt.Errorf("Unknown year format (%s).", yearText);
+    }
+
+    return strconv.Atoi(match[1]);
 }

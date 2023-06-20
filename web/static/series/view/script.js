@@ -58,6 +58,10 @@ function render(series) {
     let infoPanelParts = [];
 
     for (const infoPanel of infoPanels) {
+        if (!series[infoPanel['key']]) {
+            continue;
+        }
+
         infoPanelParts.push(`
             <div class='series-info-entry'>
                 <label>${infoPanel['label']}</label>
