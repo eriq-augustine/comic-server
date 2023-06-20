@@ -51,44 +51,64 @@ function renderArchives(archives) {
         `);
     }
 
-    document.querySelector('.series-info .archives').appendChild(entries);
+    document.querySelector('.archives').appendChild(entries);
 }
 
 function render(series) {
-    fetchAPI(`/api/archive/series/${series.ID}`, '.series-info .archives', 'Fetching archives.')
-        .then(archives => renderArchives(archives))
-        .catch(error => {
-            console.error(error);
-        });
-
     let title = series.Name;
     if (series.URL) {
         title = `<a href='${series.URL}'>${series.Name}</a>`;
     }
+    series['Title'] = title;
+
+    if (series.Description) {
+        series.Description = series.Description.trim();
+    }
+
+    let infoPanels = [
+        {'key': 'Title', 'classname': 'title', 'label': 'Title'},
+        {'key': 'Year', 'classname': 'year', 'label': 'Year'},
+        {'key': 'Author', 'classname': 'author', 'label': 'Author'},
+        {'key': 'Description', 'classname': 'description', 'label': 'Description'},
+    ];
+    let infoPanelParts = [];
+
+    for (const infoPanel of infoPanels) {
+        infoPanelParts.push(`
+            <div class='series-info-entry'>
+                <label>${infoPanel['label']}</label>
+                <div class='${infoPanel['classname']}'>${series[infoPanel['key']]}</div>
+            </div>
+        `);
+    }
 
     let html = `
-        <div class='series-info'>
-            <h2 class='title'>
-                ${title}
-            </h2>
+        <div class='left-panel'>
             <div class='cover'>
                 <img src='${getSeriesCoverPath(series)}' alt='${series.Name}' />
             </div>
-            <div class='author'>
-                by ${series.Author}
-            </div>
-            <div class='year'>
-                ${series.Year}
-            </div>
-            <div class='description'>
-                ${series.Description}
-            </div>
-            <div class='archives'>
-            </div>
+        </div>
+        <div class='right-panel'>
+            ${infoPanelParts.join("\n")}
         </div>
     `;
 
-    document.querySelector('.page-contents').innerHTML = html;
+    let seriesInfo = document.createElement('div');
+    seriesInfo.className = 'series-info';
+    seriesInfo.innerHTML = html;
+    document.querySelector('.page-contents').appendChild(seriesInfo);
+
+    // Create a stub for the archives.
+    let archives = document.createElement('div');
+    archives.className = 'archives';
+    document.querySelector('.page-contents').appendChild(archives);
+
+    // Get the archives.
+    fetchAPI(`/api/archive/series/${series.ID}`, '.archives', 'Fetching archives.')
+        .then(archives => renderArchives(archives))
+        .catch(error => {
+            console.error(error);
+        });
 }
 
 function main() {
