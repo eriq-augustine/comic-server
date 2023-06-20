@@ -1,0 +1,17 @@
+.page-contents {
+    max-height: 2100px;
+}
+
+.info {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    font-size: 2em;
+    margin-bottom: 20px;
+}
+
+.series {
+    text-decoration: underline;
+}

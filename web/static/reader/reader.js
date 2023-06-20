@@ -19,7 +19,6 @@ const SUPPORTED_IMAGE_TYPES = {
 const NEXT_PAGE = 'NEXT_PAGE';
 const PREV_PAGE = 'PREV_PAGE';
 
-// TODO(eriq): Some of these are reading direction dependent.
 // Keep a reverse map of shortcuts (since it is shorter), then invert it.
 const KEYBOARD_SHORTCUTS_REVERSE = {
     NEXT_PAGE: ['ArrowDown', 'ArrowRight', 'PageDown', 'j', 'J', 'l', 'L'],
@@ -43,8 +42,6 @@ function getImageMime(filename) {
 }
 
 async function fetchZip(url) {
-    console.debug(`Fetchig "${url}".`);
-
     let files = [];
 
     const response = await fetch(url);
@@ -97,7 +94,9 @@ class ComicReader {
     load(files) {
         let imagesContainer = this.container.querySelector('.images');
 
-        // TODO(eriq): Sort.
+        files.sort(function(a, b) {
+            return a['filename'].localeCompare(b['filename']);
+        });
 
         this.pageCount = 0;
         for (const file of files) {
@@ -155,7 +154,6 @@ class ComicReader {
                 return;
             }
 
-            // TODO(eriq): Config option for preventing default key actions.
             event.preventDefault();
             reader.navigate(KEYBOARD_SHORTCUTS[event.key]);
         });
@@ -224,21 +222,6 @@ class ComicReader {
     }
 }
 
-function main() {
-    let reader = new ComicReader('.comic-reader');
-
-    let params = new URLSearchParams(window.location.search);
-    let archiveID = params.get('archive');
-
-    let url = `/api/archive/blob/${archiveID}`;
-
-    fetchZip(url)
-        .then(files => reader.load(files))
-        .catch(error => {
-            console.error(error);
-        });
-}
-
 const TEMPLATE_HTML = `
     <div class='container'>
         <div class='controls'>
@@ -276,5 +259,3 @@ const TEMPLATE_HTML = `
         </div>
     </div>
 `;
-
-document.addEventListener("DOMContentLoaded", main);

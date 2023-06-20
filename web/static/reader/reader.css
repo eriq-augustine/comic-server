@@ -4,7 +4,8 @@
 
     padding: 20px;
 
-    background: black;
+    background-color: #282828;
+    border-radius: 20px;
 }
 
 .comic-reader .controls {
@@ -34,7 +35,8 @@
 
 .comic-reader .images {
     width: 100%;
-    height: 90%;
+    height: 90vh;
+    max-height: 2100px;
 
     overflow-y: scroll;
     overflow-X: none;
@@ -44,11 +46,15 @@
     flex-wrap: nowrap;
     justify-content: flex-start;
     align-items: center;
-    gap: 10px;
+    gap: 20px;
 }
 
 .comic-reader[data-seamless='true'] .images {
     gap: 0px;
+}
+
+.comic-reader[data-seamless='true'] .images .image {
+    margin-bottom: -3px;
 }
 
 .comic-reader .images .image,

@@ -1,8 +1,15 @@
 html {
     background-color: #1f1f1f;
+    color: white;
+
     display: flex;
     justify-content: center;
     align-items: center;
+}
+
+a {
+    color: white;
+    text-decoration: none;
 }
 
 .page {
@@ -44,8 +51,6 @@ html {
     width: 100%;
 
     text-align: center;
-    color: white;
-    text-decoration: none;
     font-size: 0.9em;
 }
 

@@ -1,23 +1,5 @@
 'use strict';
 
-function createArchiveTitle(archive) {
-    let titleParts = [];
-
-    if (archive.Volume) {
-        titleParts.push(`Volume ${archive.Volume}`);
-    }
-
-    if (archive.Chapter) {
-        titleParts.push(`Chapter ${archive.Chapter}`);
-    }
-
-    if (titleParts.length == 0) {
-        return `ID ${archive.ID}`;
-    }
-
-    return titleParts.join(' ');
-}
-
 function renderArchives(archives) {
     archives.sort(function(a, b) {
         let result = a.Volume.localeCompare(b.Volume);

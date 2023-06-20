@@ -19,6 +19,24 @@ function getSeriesCoverPath(series) {
     return DEFAULT_SERIES_COVER_IMAGE;
 }
 
+function createArchiveTitle(archive) {
+    let titleParts = [];
+
+    if (archive.Volume) {
+        titleParts.push(`Volume ${archive.Volume}`);
+    }
+
+    if (archive.Chapter) {
+        titleParts.push(`Chapter ${archive.Chapter}`);
+    }
+
+    if (titleParts.length == 0) {
+        return `ID ${archive.ID}`;
+    }
+
+    return titleParts.join(' ');
+}
+
 async function fetchAPI(url, loadingQuery, loadingMessage) {
     // TODO(eriq): Have a loading element and message.
     if (loadingMessage) {

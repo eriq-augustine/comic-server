@@ -14,6 +14,7 @@ var routes = []route{
     newRedirect("GET", `/static/index.html`, `/static/series/list/index.html`),
     newRedirect("GET", `/static/series/index.html`, `/static/series/list/index.html`),
 
+    newRoute("GET", `/api/archive/(\d+)`, handleArchive),
     newRoute("GET", `/api/archive/blob/(\d+)`, handleArchiveBlob),
     newRoute("GET", `/api/archive/list`, handleArchiveListAll),
     newRoute("GET", `/api/archive/series/(\d+)`, handleArchivesBySeries),
