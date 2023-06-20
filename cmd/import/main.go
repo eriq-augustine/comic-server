@@ -10,11 +10,11 @@ import (
     _ "github.com/eriq-augustine/comic-server/config"
     "github.com/eriq-augustine/comic-server/database"
     "github.com/eriq-augustine/comic-server/metadata"
-    "github.com/eriq-augustine/comic-server/util"
+    "github.com/eriq-augustine/comic-server/model"
 )
 
 func main() {
-    target := parseArgs();
+    targets := parseArgs();
 
     err := database.Open();
     if (err != nil) {
@@ -22,9 +22,15 @@ func main() {
     }
     defer database.Close();
 
-    archives, err := metadata.ImportPath(target);
-    if (err != nil) {
-        log.Fatal().Err(err).Str("path", target).Msg("Failed to import path.");
+    archives := make([]*model.Archive, 0);
+
+    for _, target := range targets {
+        newArchives, err := metadata.ImportPath(target);
+        if (err != nil) {
+            log.Fatal().Err(err).Str("path", target).Msg("Failed to import path.");
+        }
+
+        archives = append(archives, newArchives...);
     }
 
     fmt.Printf("Found %d archives.\n", len(archives));
@@ -33,22 +39,15 @@ func main() {
     }
 }
 
-func parseArgs() string {
-    var target = flag.String("target", "", "the file or directory to import");
-
+func parseArgs() []string {
     flag.Parse();
+    targets := flag.Args();
 
-    if (target == nil || *target == "") {
-        fmt.Println("No target specified.");
+    if (len(targets) == 0) {
+        fmt.Println("No targets specified.");
         flag.Usage();
         os.Exit(1);
     }
 
-    if (!util.PathExists(*target)) {
-        fmt.Printf("Target path does does exist: '%s'.\n", *target);
-        flag.Usage();
-        os.Exit(1);
-    }
-
-    return *target;
+    return targets;
 }
