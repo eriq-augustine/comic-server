@@ -37,6 +37,8 @@ function renderArchives(archives) {
 }
 
 function render(series) {
+    document.title = series.Name;
+
     let title = series.Name;
     if (series.URL) {
         title = `<a href='${series.URL}'>${series.Name}</a>`;

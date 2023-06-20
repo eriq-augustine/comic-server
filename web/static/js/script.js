@@ -19,15 +19,23 @@ function getSeriesCoverPath(series) {
     return DEFAULT_SERIES_COVER_IMAGE;
 }
 
-function createArchiveTitle(archive) {
+function createArchiveTitle(archive, shortName = false) {
     let titleParts = [];
 
     if (archive.Volume) {
-        titleParts.push(`Volume ${archive.Volume}`);
+        if (shortName) {
+            titleParts.push(`v${archive.Volume}`);
+        } else {
+            titleParts.push(`Volume ${archive.Volume}`);
+        }
     }
 
     if (archive.Chapter) {
-        titleParts.push(`Chapter ${archive.Chapter}`);
+        if (shortName) {
+            titleParts.push(`c${archive.Chapter}`);
+        } else {
+            titleParts.push(`Chapter ${archive.Chapter}`);
+        }
     }
 
     if (titleParts.length == 0) {

@@ -1,6 +1,8 @@
 'use strict';
 
 function render(archive) {
+    document.title = archive.Series.Name + ' ' + createArchiveTitle(archive, true);
+
     let html = `
         <div class='info'>
             <div class='series'>
