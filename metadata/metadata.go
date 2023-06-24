@@ -14,7 +14,12 @@ import (
     "github.com/eriq-augustine/comic-server/util"
 )
 
-func ImportPath(path string) ([]*model.Archive, error) {
+type ImportedArchive struct {
+    Archive *model.Archive
+    New bool
+}
+
+func ImportPath(path string) ([]*ImportedArchive, error) {
     if (util.IsDir(path)) {
         return ImportDir(path);
     }
@@ -24,29 +29,32 @@ func ImportPath(path string) ([]*model.Archive, error) {
         return nil, err;
     }
 
-    return []*model.Archive{archive}, nil;
+    return []*ImportedArchive{archive}, nil;
 }
 
-func ImportFile(path string) (*model.Archive, error) {
-    archive, err := fromPath(path);
+func ImportFile(path string) (*ImportedArchive, error) {
+    rawArchive, err := fromPath(path);
     if (err != nil) {
         return nil, fmt.Errorf("Failed to import file (%s): %w.", path, err);
     }
 
-    err = database.PersistArchive(archive);
+    exists, err := database.PersistArchive(rawArchive);
     if (err != nil) {
         return nil, fmt.Errorf("Failed to persist imported file (%s): %w.", path, err);
     }
 
-    return archive, nil;
+    log.Debug().Str("path", path).Str("name", rawArchive.Series.Name).Bool("exists", exists).Msg("Imported archive.");
+
+    var archive = ImportedArchive{Archive: rawArchive, New: !exists};
+    return &archive, nil;
 }
 
 // Recursively import archive from a directory.
 // First the directory will be walked and all the archives collected.
 // Then, they will be added to the database (if no error has occured).
 // On error, no archives will be added to the database.
-func ImportDir(rootPath string) ([]*model.Archive, error) {
-    var archives = make([]*model.Archive, 0);
+func ImportDir(rootPath string) ([]*ImportedArchive, error) {
+    var archives = make([]*ImportedArchive, 0);
 
     err := filepath.WalkDir(rootPath, func(path string, dirent fs.DirEntry, err error) error {
         if (err != nil) {

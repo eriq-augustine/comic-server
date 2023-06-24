@@ -22,43 +22,29 @@ var SQL_SELECT_ARCHIVE_BY_ID string;
 //go:embed sql/select-archive-by-path.sql
 var SQL_SELECT_ARCHIVE_BY_PATH string;
 
-// Ensure that each archive exists in the database.
-// Whether from the passed in archive or the database,
-// each archive will have its latest metadata attatched when done.
-func PersistArchives(archives []*model.Archive) error {
-    for _, archive := range archives {
-        err := PersistArchive(archive);
-        if (err != nil) {
-            return err;
-        }
-    }
-
-    return nil;
-}
-
 // TODO(eriq): This function does not consider updating an existing archive.
-func PersistArchive(archive *model.Archive) error {
+func PersistArchive(archive *model.Archive) (bool, error) {
     if (archive.Path == "") {
-        return fmt.Errorf("Persisting archive requires a Path.");
+        return false, fmt.Errorf("Persisting archive requires a Path.");
     }
 
     if ((archive.Series == nil) || (archive.Series.Name == "")) {
-        return fmt.Errorf("Persisting archive requires a series name.");
+        return false, fmt.Errorf("Persisting archive requires a series name.");
     }
 
     dbArchive, err := FetchArchiveByPath(archive.Path);
     if (err != nil) {
-        return err;
+        return false, err;
     }
 
     if (dbArchive != nil) {
         // This archive already exists in the DB, just use the DB version.
         archive.Assume(dbArchive);
-        return nil;
+        return true, nil;
     }
 
     // The archive does not exist in the db, add it.
-    return insertArchive(archive);
+    return false, insertArchive(archive);
 }
 
 func insertArchive(archive *model.Archive) error {

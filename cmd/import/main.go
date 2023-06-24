@@ -9,7 +9,6 @@ import (
     "github.com/eriq-augustine/comic-server/config"
     "github.com/eriq-augustine/comic-server/database"
     "github.com/eriq-augustine/comic-server/metadata"
-    "github.com/eriq-augustine/comic-server/model"
 )
 
 var args struct {
@@ -30,7 +29,8 @@ func main() {
     }
     defer database.Close();
 
-    archives := make([]*model.Archive, 0);
+    numNewArchives := 0;
+    numExistingArchives := 0;
 
     for _, target := range args.Path {
         newArchives, err := metadata.ImportPath(target);
@@ -38,11 +38,14 @@ func main() {
             log.Fatal().Err(err).Str("path", target).Msg("Failed to import path.");
         }
 
-        archives = append(archives, newArchives...);
+        for _, archive := range newArchives {
+            if (archive.New) {
+                numNewArchives++;
+            } else {
+                numExistingArchives++;
+            }
+        }
     }
 
-    fmt.Printf("Found %d archives.\n", len(archives));
-    for _, archive := range archives {
-        fmt.Println("    ", archive);
-    }
+    fmt.Printf("Found %d new and %d existing archives.\n", numNewArchives, numExistingArchives);
 }
