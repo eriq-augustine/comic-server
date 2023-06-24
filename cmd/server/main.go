@@ -1,6 +1,7 @@
 package main
 
 import (
+    "github.com/alecthomas/kong"
     "github.com/rs/zerolog/log"
 
     "github.com/eriq-augustine/comic-server/config"
@@ -19,7 +20,7 @@ func main() {
         log.Fatal().Err(err).Msg("Could not load config options.");
     }
 
-    err := database.Open();
+    err = database.Open();
     if (err != nil) {
         log.Fatal().Err(err).Msg("Could not open database.");
     }
