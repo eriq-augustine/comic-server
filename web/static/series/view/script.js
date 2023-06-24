@@ -24,7 +24,7 @@ function renderArchives(archives) {
         entries.insertAdjacentHTML('beforeend', `
             <div class='archive-entry preview' data-id='${archive.ID}'>
                 <a href='/static/reader/index.html?archive=${archive.ID}'>
-                    <img src='${getArchiveThumbnailPath(archive)}' alt='${title}' />
+                    <img src='${getArchiveThumbnailPath(archive)}' loading='lazy' alt='${title}' />
                     <div class='title'>
                         ${title}
                     </div>

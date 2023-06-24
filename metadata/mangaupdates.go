@@ -18,6 +18,8 @@ const SOURCE_MANGA_UPDATES = "MangaUpdates";
 const BASE_SEARCH_URL = "https://www.mangaupdates.com/series.html";
 const BASE_SERIES_URL = "https://www.mangaupdates.com/series/";
 
+const MAX_SERIES_RESULTS = 10
+
 func init() {
     metadataSources[SOURCE_MANGA_UPDATES] = crawlMangaUdates;
 }
@@ -63,6 +65,10 @@ func mangaupdatesSearch(query string, year int) ([]string, error) {
     var ids = make([]string, 0);
 
     doc.Find(`div.text > a[alt="Series Info"]`).Each(func(id int, ele *goquery.Selection) {
+        if (len(ids) >= MAX_SERIES_RESULTS) {
+            return;
+        }
+
         url, exists := ele.Attr("href");
         if (!exists) {
             return;

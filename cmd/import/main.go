@@ -1,22 +1,30 @@
 package main
 
 import (
-    "flag"
     "fmt"
-    "os"
 
+    "github.com/alecthomas/kong"
     "github.com/rs/zerolog/log"
 
-    _ "github.com/eriq-augustine/comic-server/config"
+    "github.com/eriq-augustine/comic-server/config"
     "github.com/eriq-augustine/comic-server/database"
     "github.com/eriq-augustine/comic-server/metadata"
     "github.com/eriq-augustine/comic-server/model"
 )
 
-func main() {
-    targets := parseArgs();
+var args struct {
+    config.ConfigArgs
+    Path []string `help:"Target paths to import." arg:"" type:"path"`
+}
 
-    err := database.Open();
+func main() {
+    kong.Parse(&args);
+    err := config.HandleConfigArgs(args.ConfigArgs);
+    if (err != nil) {
+        log.Fatal().Err(err).Msg("Could not load config options.");
+    }
+
+    err = database.Open();
     if (err != nil) {
         log.Fatal().Err(err).Msg("Could not open database.");
     }
@@ -24,7 +32,7 @@ func main() {
 
     archives := make([]*model.Archive, 0);
 
-    for _, target := range targets {
+    for _, target := range args.Path {
         newArchives, err := metadata.ImportPath(target);
         if (err != nil) {
             log.Fatal().Err(err).Str("path", target).Msg("Failed to import path.");
@@ -37,17 +45,4 @@ func main() {
     for _, archive := range archives {
         fmt.Println("    ", archive);
     }
-}
-
-func parseArgs() []string {
-    flag.Parse();
-    targets := flag.Args();
-
-    if (len(targets) == 0) {
-        fmt.Println("No targets specified.");
-        flag.Usage();
-        os.Exit(1);
-    }
-
-    return targets;
 }
