@@ -3,14 +3,25 @@ package main
 import (
     "fmt"
 
+    "github.com/alecthomas/kong"
     "github.com/rs/zerolog/log"
 
-    _ "github.com/eriq-augustine/comic-server/config"
+    "github.com/eriq-augustine/comic-server/config"
     "github.com/eriq-augustine/comic-server/database"
 )
 
+var args struct {
+    config.ConfigArgs
+}
+
 func main() {
-    err := database.Open();
+    kong.Parse(&args);
+    err := config.HandleConfigArgs(args.ConfigArgs);
+    if (err != nil) {
+        log.Fatal().Err(err).Msg("Could not load config options.");
+    }
+
+    err = database.Open();
     if (err != nil) {
         log.Fatal().Err(err).Msg("Could not open database.");
     }
