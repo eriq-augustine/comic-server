@@ -16,6 +16,8 @@ import (
     "github.com/eriq-augustine/comic-server/config"
 )
 
+const CACHE_DIRNAME string = "cache";
+
 // Do not query a single site too quickly.
 const RATE_LIMIT_DELAY_SEC = 2
 var rateLimit = make(map[string]time.Time);
@@ -126,5 +128,5 @@ func saveCache(url string, data []byte) error {
 }
 
 func getCachePath(url string) string {
-    return filepath.Join(config.GetString("cache.dir"), url);
+    return filepath.Join(config.GetString("datadir"), CACHE_DIRNAME, url);
 }

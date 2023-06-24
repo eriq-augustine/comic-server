@@ -7,6 +7,8 @@ import (
     "github.com/eriq-augustine/comic-server/config"
 )
 
+const IMAGE_DIRNAME string = "images";
+
 // Returns (abspath, relpath, error).
 func FetchImage(url string) (string, string, error) {
     var relpath = filepath.Clean(url);
@@ -46,5 +48,5 @@ func CopyImage(relSource string, relDest string) (string, error) {
 }
 
 func GetImagePath(relpath string) string {
-    return filepath.Join(config.GetString("image.dir"), relpath);
+    return filepath.Join(config.GetString("datadir"), IMAGE_DIRNAME, relpath);
 }

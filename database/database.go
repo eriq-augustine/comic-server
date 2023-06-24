@@ -14,6 +14,8 @@ import (
     "github.com/eriq-augustine/comic-server/config"
 )
 
+const DB_FILENAME string = "comic-server.db";
+
 var db *sql.DB = nil;
 var dbMutex sync.Mutex;
 
@@ -32,7 +34,7 @@ func Open() error {
         return nil;
     }
 
-    var dbPath = config.GetString("db.path");
+    var dbPath = filepath.Join(config.GetString("datadir"), DB_FILENAME);
     os.MkdirAll(filepath.Dir(dbPath), 0755);
 
     var err error;

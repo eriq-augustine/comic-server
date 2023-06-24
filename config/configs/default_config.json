@@ -1,7 +1,5 @@
 {
     "log.level": "DEBUG",
     "server.port": 8080,
-    "db.path": "__data__/comic-server.db",
-    "cache.dir": "__data__/cache",
-    "image.dir": "__data__/images"
+    "datadir": "__data__"
 }
