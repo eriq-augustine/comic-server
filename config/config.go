@@ -31,12 +31,7 @@ func init() {
         log.Fatal().Err(err).Msg("Failed to load the default config.");
     }
 
-    var rawLogLevel = GetString("log.level");
-    level, err := zerolog.ParseLevel(rawLogLevel);
-    if (err != nil) {
-        log.Fatal().Err(err).Str("level", rawLogLevel).Msg("Failed to parse the logging level.");
-    }
-    zerolog.SetGlobalLevel(level);
+    InitLogging();
 
     for _, key := range pathKeys {
         err = os.MkdirAll(GetString(key), 0775);
@@ -44,6 +39,15 @@ func init() {
             log.Fatal().Err(err).Str("key", key).Str("path", GetString(key)).Msg("Failed to ensure path.");
         }
     }
+}
+
+func InitLogging() {
+    var rawLogLevel = GetString("log.level");
+    level, err := zerolog.ParseLevel(rawLogLevel);
+    if (err != nil) {
+        log.Fatal().Err(err).Str("level", rawLogLevel).Msg("Failed to parse the logging level.");
+    }
+    zerolog.SetGlobalLevel(level);
 }
 
 // See LoadReader().

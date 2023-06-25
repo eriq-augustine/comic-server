@@ -18,5 +18,7 @@ func HandleConfigArgs(args ConfigArgs) error {
         Set(key, value);
     }
 
+    InitLogging();
+
     return nil;
 }
