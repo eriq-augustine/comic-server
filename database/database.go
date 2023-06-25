@@ -34,7 +34,7 @@ func Open() error {
         return nil;
     }
 
-    var dbPath = filepath.Join(config.GetString("datadir"), DB_FILENAME);
+    var dbPath = filepath.Join(config.GetString("paths.config"), DB_FILENAME);
     os.MkdirAll(filepath.Dir(dbPath), 0755);
 
     var err error;

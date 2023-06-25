@@ -1,5 +1,7 @@
 {
     "log.level": "INFO",
     "server.port": 8080,
-    "datadir": "__data__"
+
+    "paths.config": "__data__/config",
+    "paths.archives": "__data__/archives"
 }

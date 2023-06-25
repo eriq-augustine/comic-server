@@ -3,16 +3,20 @@ package metadata
 import (
     "fmt"
     "io/fs"
+    "os"
     "path/filepath"
     "regexp"
     "strings"
 
     "github.com/rs/zerolog/log"
 
+    "github.com/eriq-augustine/comic-server/config"
     "github.com/eriq-augustine/comic-server/database"
     "github.com/eriq-augustine/comic-server/model"
     "github.com/eriq-augustine/comic-server/util"
 )
+
+const IMPORTED_ARCHIVES_DIR = "__imported_archives__";
 
 type ImportedArchive struct {
     Archive *model.Archive
@@ -29,13 +33,24 @@ func ImportPath(path string) ([]*ImportedArchive, error) {
         return nil, err;
     }
 
-    return []*ImportedArchive{archive}, nil;
+    result := make([]*ImportedArchive, 0, 1);
+
+    if (archive == nil) {
+        return result, nil;
+    }
+
+    return append(result, archive), nil;
 }
 
+// May return (nil, nil) if the path is not an archive.
 func ImportFile(path string) (*ImportedArchive, error) {
     rawArchive, err := fromPath(path);
     if (err != nil) {
         return nil, fmt.Errorf("Failed to import file (%s): %w.", path, err);
+    }
+
+    if (rawArchive == nil) {
+        return nil, nil;
     }
 
     exists, err := database.PersistArchive(rawArchive);
@@ -70,7 +85,10 @@ func ImportDir(rootPath string) ([]*ImportedArchive, error) {
             return err;
         }
 
-        archives = append(archives, archive);
+        if (archive != nil) {
+            archives = append(archives, archive);
+        }
+
         return nil;
     });
 
@@ -83,13 +101,18 @@ func ImportDir(rootPath string) ([]*ImportedArchive, error) {
 
 // Try to re-create metadata using only path information.
 func fromPath(path string) (*model.Archive, error) {
-    var filename = filepath.Base(path);
-    path, err := filepath.Abs(path);
+    abspath, err := filepath.Abs(path);
     if (err != nil) {
         return nil, fmt.Errorf("Could not form abs path from '%s': %w.", path, err);
     }
 
-    var archive = model.EmptyArchive(path);
+    relpath, requiresCopy, err := resolveArchivePath(abspath);
+    if (err != nil) {
+        return nil, err;
+    }
+
+    var filename = filepath.Base(path);
+    var archive = model.EmptyArchive(relpath);
 
     var pattern = regexp.MustCompile(`^(.*)\s+v(\d+[a-z]?)\s*c(\d+[a-z]?)\.(?i:cbz|zip)$`);
     match := pattern.FindStringSubmatch(filename);
@@ -104,23 +127,69 @@ func fromPath(path string) (*model.Archive, error) {
     ext := filepath.Ext(strings.ToLower(filename));
     switch ext {
     case ".zip":
-        pageCount, err := util.ZipImageCount(path);
+        pageCount, err := util.ZipImageCount(abspath);
         if (err != nil) {
-            log.Warn().Err(err).Str("path", path).Msg("Failed to get zip page count.");
+            log.Warn().Err(err).Str("path", abspath).Msg("Failed to get zip page count.");
         } else {
             archive.PageCount = &pageCount;
         }
     case ".cbz":
-        pageCount, coverImagePath, err := util.CBZInfo(path);
+        pageCount, coverImagePath, err := util.CBZInfo(abspath);
         if (err != nil) {
-            log.Warn().Err(err).Str("path", path).Msg("Failed to get CBZ image info.");
+            log.Warn().Err(err).Str("path", abspath).Msg("Failed to get CBZ image info.");
         } else {
             archive.PageCount = &pageCount;
             archive.CoverImageRelPath = &coverImagePath;
         }
     default:
-        return nil, fmt.Errorf("Unrecognized archive type (%s), can only use cbz and zip.", ext);
+        log.Debug().Str("extension", ext).Msg("Unrecognized archive extension, can only use cbz and zip. Skipping");
+        return nil, nil;
+    }
+
+    if (requiresCopy) {
+        destPath := filepath.Join(config.GetString("paths.archives"), relpath);
+        err = util.CopyFile(abspath, destPath);
+        if (err != nil) {
+            return nil, err;
+        }
     }
 
     return archive, nil;
+}
+
+// Create a relative path that represents |path| relative to the archives directory.
+// If the path is outside of the archives directory, then the boolean will be true.
+// Returns: (relpath, requires copy, error).
+func resolveArchivePath(path string) (string, bool, error) {
+    archivesPath, err := util.AbsWithSlash(config.GetString("paths.archives"));
+    if (err != nil) {
+        return "", false, err;
+    }
+
+    path, err = util.AbsWithSlash(path);
+    if (err != nil) {
+        return "", false, err;
+    }
+
+    isPrefix, err := util.IsPrefixPath(path, archivesPath);
+    if (err != nil) {
+        return "", false, err;
+    }
+
+    if (isPrefix) {
+        relpath, err := filepath.Rel(archivesPath, path);
+        if (err != nil) {
+            return "", false, err;
+        }
+
+        return relpath, false, nil;
+    }
+
+    err = os.MkdirAll(filepath.Join(archivesPath, IMPORTED_ARCHIVES_DIR), 0775);
+    if (err != nil) {
+        return "", false, err;
+    }
+
+    relpath := filepath.Join(IMPORTED_ARCHIVES_DIR, filepath.Base(path));
+    return relpath, true, nil;
 }

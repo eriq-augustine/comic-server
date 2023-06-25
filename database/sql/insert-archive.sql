@@ -1,6 +1,6 @@
 INSERT INTO Archives (
     series_id,
-    path,
+    relpath,
     volume,
     chapter,
     page_count,

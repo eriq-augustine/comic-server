@@ -24,15 +24,15 @@ var SQL_SELECT_ARCHIVE_BY_PATH string;
 
 // TODO(eriq): This function does not consider updating an existing archive.
 func PersistArchive(archive *model.Archive) (bool, error) {
-    if (archive.Path == "") {
-        return false, fmt.Errorf("Persisting archive requires a Path.");
+    if (archive.RelPath == "") {
+        return false, fmt.Errorf("Persisting archive requires a RelPath.");
     }
 
     if ((archive.Series == nil) || (archive.Series.Name == "")) {
         return false, fmt.Errorf("Persisting archive requires a series name.");
     }
 
-    dbArchive, err := FetchArchiveByPath(archive.Path);
+    dbArchive, err := FetchArchiveByPath(archive.RelPath);
     if (err != nil) {
         return false, err;
     }
@@ -67,7 +67,7 @@ func insertArchive(archive *model.Archive) error {
 
     result, err := statement.Exec(
         archive.Series.ID,
-        archive.Path,
+        archive.RelPath,
         archive.Volume,
         archive.Chapter,
         archive.PageCount,
@@ -186,7 +186,7 @@ func scanArchive(scanner RowScanner) (*model.Archive, error) {
 
     err := scanner.Scan(
             &archive.ID,
-            &archive.Path,
+            &archive.RelPath,
             &archive.Volume,
             &archive.Chapter,
             &archive.PageCount,
@@ -213,7 +213,7 @@ func scanArchiveNoSeries(scanner RowScanner) (*model.Archive, int, error) {
     err := scanner.Scan(
             &archive.ID,
             &seriesID,
-            &archive.Path,
+            &archive.RelPath,
             &archive.Volume,
             &archive.Chapter,
             &archive.PageCount,

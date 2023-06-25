@@ -4,8 +4,10 @@ import (
     "encoding/json"
     "fmt"
     "net/http"
+    "path/filepath"
     "strconv"
 
+    "github.com/eriq-augustine/comic-server/config"
     "github.com/eriq-augustine/comic-server/database"
 )
 
@@ -33,7 +35,7 @@ func handleArchiveBlob(matches []string, response http.ResponseWriter, request *
         return fmt.Errorf("Failed to fetch archive (%d): %w.", id, err);
     }
 
-    http.ServeFile(response, request, archive.Path);
+    http.ServeFile(response, request, filepath.Join(config.GetString("paths.archives"), archive.RelPath));
     return nil;
 }
 

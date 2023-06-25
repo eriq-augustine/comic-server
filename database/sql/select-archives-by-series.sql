@@ -1,7 +1,7 @@
 SELECT
     A.id,
     A.series_id,
-    A.path,
+    A.relpath,
     A.volume,
     A.chapter,
     A.page_count,

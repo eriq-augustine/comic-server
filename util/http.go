@@ -128,5 +128,5 @@ func saveCache(url string, data []byte) error {
 }
 
 func getCachePath(url string) string {
-    return filepath.Join(config.GetString("datadir"), CACHE_DIRNAME, url);
+    return filepath.Join(config.GetString("paths.config"), CACHE_DIRNAME, url);
 }

@@ -76,7 +76,7 @@ func (this *Series) String() string {
 // The are (or can be) packaged up in a single CBZ file.
 type Archive struct {
     ID int
-    Path string
+    RelPath string
     Series *Series
     Volume *string
     Chapter *string
@@ -84,10 +84,10 @@ type Archive struct {
     CoverImageRelPath *string
 }
 
-func EmptyArchive(path string) *Archive {
+func EmptyArchive(relpath string) *Archive {
     return &Archive{
         ID: -1,
-        Path: path,
+        RelPath: relpath,
         Series: EmptySeries()}
     ;
 }
@@ -95,7 +95,7 @@ func EmptyArchive(path string) *Archive {
 // Assume all the attributes of other.
 func (this *Archive) Assume(other *Archive) {
     this.ID = other.ID;
-    this.Path = other.Path;
+    this.RelPath = other.RelPath;
     this.Series = other.Series;
     this.Volume = other.Volume;
     this.Chapter = other.Chapter;

@@ -21,7 +21,7 @@ CREATE TABLE Series (
 CREATE TABLE Archives (
     id INTEGER PRIMARY KEY,
     series_id INTEGER REFERENCES Series(id),
-    path TEXT NOT NULL UNIQUE,
+    relpath TEXT NOT NULL UNIQUE,
     volume TEXT,
     chapter TEXT,
     page_count INTEGER,

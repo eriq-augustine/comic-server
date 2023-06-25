@@ -1,6 +1,6 @@
 SELECT
     A.id,
-    A.path,
+    A.relpath,
     A.volume,
     A.chapter,
     A.page_count,
@@ -18,5 +18,5 @@ SELECT
 FROM
     Archives A
     JOIN Series S ON S.id = A.series_id
-WHERE A.path = ?
+WHERE A.relpath = ?
 ;

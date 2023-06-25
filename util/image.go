@@ -48,5 +48,5 @@ func CopyImage(relSource string, relDest string) (string, error) {
 }
 
 func GetImagePath(relpath string) string {
-    return filepath.Join(config.GetString("datadir"), IMAGE_DIRNAME, relpath);
+    return filepath.Join(config.GetString("paths.config"), IMAGE_DIRNAME, relpath);
 }

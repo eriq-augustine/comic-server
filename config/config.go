@@ -22,6 +22,9 @@ var DEFAULT_CONFIG string;
 
 var options map[string]any = make(map[string]any);
 
+// Ensure these paths exists on init.
+var pathKeys = []string{"paths.config", "paths.archives"};
+
 func init() {
     err := LoadString(DEFAULT_CONFIG);
     if (err != nil) {
@@ -34,6 +37,13 @@ func init() {
         log.Fatal().Err(err).Str("level", rawLogLevel).Msg("Failed to parse the logging level.");
     }
     zerolog.SetGlobalLevel(level);
+
+    for _, key := range pathKeys {
+        err = os.MkdirAll(GetString(key), 0775);
+        if (err != nil) {
+            log.Fatal().Err(err).Str("key", key).Str("path", GetString(key)).Msg("Failed to ensure path.");
+        }
+    }
 }
 
 // See LoadReader().

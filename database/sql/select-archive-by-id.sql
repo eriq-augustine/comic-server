@@ -1,6 +1,6 @@
 SELECT
     A.id,
-    A.path,
+    A.relpath,
     A.volume,
     A.chapter,
     A.page_count,

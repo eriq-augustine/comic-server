@@ -12,7 +12,7 @@ function renderArchives(archives) {
             return result;
         }
 
-        return a.Path.localeCompare(b.Path);
+        return a.RelPath.localeCompare(b.RelPath);
     });
 
     let entries = document.createElement('div');
