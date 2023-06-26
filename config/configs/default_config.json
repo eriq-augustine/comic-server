@@ -3,5 +3,7 @@
     "server.port": 8080,
 
     "paths.config": "__data__/config",
-    "paths.archives": "__data__/archives"
+    "paths.archives": "__data__/archives",
+
+    "parallel.maxpoolsize": 64
 }
