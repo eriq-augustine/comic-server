@@ -1,6 +1,7 @@
 package metadata
 
 import (
+    "errors"
     "fmt"
     "io/fs"
     "os"
@@ -65,11 +66,11 @@ func ImportFile(path string) (*ImportedArchive, error) {
 }
 
 // Recursively import archive from a directory.
-// First the directory will be walked and all the archives collected.
-// Then, they will be added to the database (if no error has occured).
-// On error, no archives will be added to the database.
+// Archives will be added as they are collected.
+// Any errors that occur at the archive level will be joined in the return error and a nil will be placed in the retrned slice.
 func ImportDir(rootPath string) ([]*ImportedArchive, error) {
     var archives = make([]*ImportedArchive, 0);
+    var allErrors error = nil;
 
     err := filepath.WalkDir(rootPath, func(path string, dirent fs.DirEntry, err error) error {
         if (err != nil) {
@@ -81,22 +82,16 @@ func ImportDir(rootPath string) ([]*ImportedArchive, error) {
         }
 
         archive, err := ImportFile(path);
-        if (err != nil) {
-            return err;
-        }
 
-        if (archive != nil) {
-            archives = append(archives, archive);
-        }
+        archives = append(archives, archive);
+        err = errors.Join(allErrors, err);
 
         return nil;
     });
 
-    if (err != nil) {
-        return nil, err;
-    }
+    allErrors = errors.Join(allErrors, err);
 
-    return archives, nil;
+    return archives, allErrors;
 }
 
 // Try to re-create metadata using only path information.

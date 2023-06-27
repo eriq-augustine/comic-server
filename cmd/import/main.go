@@ -2,6 +2,7 @@ package main
 
 import (
     "fmt"
+    "os"
 
     "github.com/alecthomas/kong"
     "github.com/rs/zerolog/log"
@@ -31,14 +32,19 @@ func main() {
 
     numNewArchives := 0;
     numExistingArchives := 0;
+    numErrorArchives := 0;
 
     for _, target := range args.Path {
         newArchives, err := metadata.ImportPath(target);
         if (err != nil) {
-            log.Fatal().Err(err).Str("path", target).Msg("Failed to import path.");
+            log.Error().Err(err).Str("path", target).Msg("Failed to import all archives on path.");
         }
 
         for _, archive := range newArchives {
+            if (archive == nil) {
+                numErrorArchives++;
+            }
+
             if (archive.New) {
                 numNewArchives++;
             } else {
@@ -47,5 +53,11 @@ func main() {
         }
     }
 
-    fmt.Printf("Found %d new and %d existing archives.\n", numNewArchives, numExistingArchives);
+    fmt.Printf("Encountered %d new, %d existing, and %d erroneous archives.\n", numNewArchives, numExistingArchives, numErrorArchives);
+
+    if (numErrorArchives > 0) {
+        os.Exit(1);
+    }
+
+    os.Exit(0);
 }

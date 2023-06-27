@@ -22,7 +22,6 @@ var SQL_SELECT_ARCHIVE_BY_ID string;
 //go:embed sql/select-archive-by-path.sql
 var SQL_SELECT_ARCHIVE_BY_PATH string;
 
-// TODO(eriq): This function does not consider updating an existing archive.
 func PersistArchive(archive *model.Archive) (bool, error) {
     if (archive.RelPath == "") {
         return false, fmt.Errorf("Persisting archive requires a RelPath.");

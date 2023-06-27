@@ -6,8 +6,7 @@ import (
     "github.com/eriq-augustine/comic-server/config"
 )
 
-const MAX_CHAN_SIZE = 256
-const MIN_CHAN_SIZE = 4
+const MIN_CHAN_SIZE = 256;
 
 type PoolConsumer[T any, R any] func(value T) (R, error);
 
@@ -28,36 +27,47 @@ type ParallelPool[T any, R any] struct {
     inputChan chan poolInput[T]
     outputChan chan poolResult[R]
     openForWork bool
-    fetchedResult bool
     closed bool
 }
 
-func NewPool[T any, R any](consumer PoolConsumer[T, R]) (*ParallelPool[T, R]) {
-    return NewPoolWithSize(0, consumer);
+func NewParallelPool[T any, R any](consumer PoolConsumer[T, R]) (*ParallelPool[T, R]) {
+    return NewParallelPoolWithSize(0, consumer);
 }
 
-func NewPoolWithSize[T any, R any](numValues int, consumer PoolConsumer[T, R]) (*ParallelPool[T, R]) {
+func NewParallelPoolWithSize[T any, R any](numValues int, consumer PoolConsumer[T, R]) (*ParallelPool[T, R]) {
     poolSize := config.GetInt("parallel.maxpoolsize");
 
     inputChan := make(chan poolInput[T], getChanSize(numValues));
     outputChan := make(chan poolResult[R], getChanSize(numValues));
 
+    exitedConsumers := make(chan int, poolSize);
+
     // Create the pool consumers.
     for i := 0; i < poolSize; i++ {
-        go func() {
+        go func(id int) {
             for input := range inputChan {
                 result, err := consumer(input.value);
                 outputChan <- poolResult[R]{input.index, result, err};
             }
-        }();
+
+            exitedConsumers <- id;
+        }(i);
     }
+
+    // Close the output channel once all the consumers have stopped.
+    go func() {
+        for i := 0; i < poolSize; i++ {
+            <- exitedConsumers;
+        }
+
+        close(outputChan);
+    }();
 
     pool := ParallelPool[T, R]{
         workCount: 0,
         inputChan: inputChan,
         outputChan: outputChan,
         openForWork: true,
-        fetchedResult: false,
         closed: false,
     };
 
@@ -65,15 +75,17 @@ func NewPoolWithSize[T any, R any](numValues int, consumer PoolConsumer[T, R]) (
 }
 
 // Will panic if ParallelPool.NoMoreWork() is called first.
+// Should be called on the same thread as NoMoreWork.
 func (this *ParallelPool[T, R]) AddWork(value T) {
     if (!this.openForWork) {
-        panic("Cannot add more work ParallelPool to after NoMoreWork() of GetAllResults called.");
+        panic("Cannot add more work to a ParallelPool after NoMoreWork() is called.");
     }
 
     this.inputChan <- poolInput[T]{this.workCount, value};
     this.workCount++;
 }
 
+// Should be called on the same thread as AddWork.
 func (this *ParallelPool[T, R]) NoMoreWork() {
     if (!this.openForWork) {
         return;
@@ -83,37 +95,16 @@ func (this *ParallelPool[T, R]) NoMoreWork() {
     close(this.inputChan);
 }
 
-// Cannot be used with GetAllResults().
-func (this *ParallelPool[T, R]) GetResult() (R, error) {
-    this.fetchedResult = true;
-
-    output := <- this.outputChan;
-    return output.result, output.err;
-}
-
-// Will also call NoMoreWork() and Close().
-// Cannot be used with GetResult().
-func (this *ParallelPool[T, R]) GetAllResults() ([]R, error) {
-    if (this.fetchedResult) {
-        panic("Cannot use both GetResult() and GetAllResults() in ParallelPool.");
+// The returned boolean will be false when the output channel has been closed and there is no work
+// work on it (i.e., all work is consumed).
+func (this *ParallelPool[T, R]) GetResult() (R, bool, error) {
+    output, ok := <- this.outputChan;
+    if (!ok) {
+        var empty R;
+        return empty, false, nil;
     }
 
-    this.NoMoreWork();
-
-    results := make([]R, this.workCount);
-    var consumeErrors error = nil;
-
-    // Consume output.
-    for i := 0; i < this.workCount; i++ {
-        output := <- this.outputChan;
-
-        results[output.index] = output.result;
-        consumeErrors = errors.Join(consumeErrors, output.err);
-    }
-
-    this.Close();
-
-    return results, consumeErrors;
+    return output.result, true, output.err;
 }
 
 func (this *ParallelPool[T, R]) Close() {
@@ -121,12 +112,12 @@ func (this *ParallelPool[T, R]) Close() {
         return;
     }
 
+    this.NoMoreWork();
     this.closed = true;
-    close(this.outputChan);
 }
 
 func PoolMap[T any, R any](values []T, consumer PoolConsumer[T, R]) ([]R, error) {
-    pool := NewPoolWithSize(len(values), consumer);
+    pool := NewParallelPoolWithSize(len(values), consumer);
     defer pool.Close();
 
     // Put the work in the queue.
@@ -135,9 +126,18 @@ func PoolMap[T any, R any](values []T, consumer PoolConsumer[T, R]) ([]R, error)
     }
     pool.NoMoreWork();
 
-    return pool.GetAllResults();
+    results := make([]R, len(values));
+    var allErrors error = nil;
+
+    for i := 0; i < len(values); i++ {
+        result := <- pool.outputChan;
+        results[result.index] = result.result;
+        allErrors = errors.Join(allErrors, result.err);
+    }
+
+    return results, allErrors;
 }
 
 func getChanSize(numValues int) int {
-    return Max(MIN_CHAN_SIZE, Min(MAX_CHAN_SIZE, numValues));
+    return Max(MIN_CHAN_SIZE, numValues);
 }
