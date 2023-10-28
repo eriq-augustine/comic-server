@@ -11,6 +11,7 @@ import (
 )
 
 var routes = []route{
+    newRedirect("GET", `/`, `/static/series/list/index.html`),
     newRedirect("GET", `/static/index.html`, `/static/series/list/index.html`),
     newRedirect("GET", `/static/series/index.html`, `/static/series/list/index.html`),
 
