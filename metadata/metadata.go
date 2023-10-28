@@ -45,6 +45,8 @@ func ImportPath(path string) ([]*ImportedArchive, error) {
 
 // May return (nil, nil) if the path is not an archive.
 func ImportFile(path string) (*ImportedArchive, error) {
+    log.Trace().Str("path", path).Msg("Importing file.");
+
     rawArchive, err := fromPath(path);
     if (err != nil) {
         return nil, fmt.Errorf("Failed to import file (%s): %w.", path, err);
@@ -69,6 +71,8 @@ func ImportFile(path string) (*ImportedArchive, error) {
 // Archives will be added as they are collected.
 // Any errors that occur at the archive level will be joined in the return error and a nil will be placed in the retrned slice.
 func ImportDir(rootPath string) ([]*ImportedArchive, error) {
+    log.Debug().Str("path", rootPath).Msg("Importing Dir");
+
     var archives = make([]*ImportedArchive, 0);
     var allErrors error = nil;
 
@@ -84,7 +88,7 @@ func ImportDir(rootPath string) ([]*ImportedArchive, error) {
         archive, err := ImportFile(path);
 
         archives = append(archives, archive);
-        err = errors.Join(allErrors, err);
+        allErrors = errors.Join(allErrors, err);
 
         return nil;
     });

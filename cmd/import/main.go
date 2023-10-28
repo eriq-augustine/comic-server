@@ -38,14 +38,13 @@ func main() {
         newArchives, err := metadata.ImportPath(target);
         if (err != nil) {
             log.Error().Err(err).Str("path", target).Msg("Failed to import all archives on path.");
+            continue;
         }
 
         for _, archive := range newArchives {
             if (archive == nil) {
                 numErrorArchives++;
-            }
-
-            if (archive.New) {
+            } else if (archive.New) {
                 numNewArchives++;
             } else {
                 numExistingArchives++;
